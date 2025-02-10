@@ -18,7 +18,7 @@ func (j JsonResponse) Response(c *gin.Context, status int, responseCode string, 
 	data["code"] = responseCode
 	data["status"] = status
 
-	c.JSON(status, data)
+	c.JSON(200, data)
 
 	slog.Info("request info",
 		slog.Int("status", status),
@@ -29,7 +29,10 @@ func (j JsonResponse) Response(c *gin.Context, status int, responseCode string, 
 
 func (j JsonResponse) ErrorResponse(c *gin.Context, status int, responseCode string, data map[string]any, errs ...error) {
 	if errs == nil {
-		slog.Error("errs is required in ErrorResponse")
+		panic("ErrorResponse: errs is required in ErrorResponse")
+	}
+	if len(errs) >= 1 && errs[0] == nil {
+		panic("ErrorResponse: first error in errs is nil")
 	}
 
 	if data == nil {
@@ -39,6 +42,7 @@ func (j JsonResponse) ErrorResponse(c *gin.Context, status int, responseCode str
 	temp := make(map[string]string)
 
 	for _, err := range errs {
+		slog.Error("kdjkfkf", "err", len(errs))
 		splited := strings.Split(err.Error(), ": ")
 		if len(splited) == 1 {
 			temp["non_field"] = splited[0]
@@ -56,11 +60,14 @@ func (j JsonResponse) ServerErrorResponse(c *gin.Context, err error) {
 	j.Response(c, http.StatusInternalServerError, "", map[string]any{"msg": "Internal server error"})
 }
 
-func (j JsonResponse) ServerOrUserErrorResponse(c *gin.Context, serverErr error, userErrs []error, responseCode string) {
+func (j JsonResponse) ServerOrUserErrorResponse(c *gin.Context, status int, serverErr error, userErrs []error, responseCode string) {
+	if status == 0 {
+		status = http.StatusBadRequest
+	}
 	if serverErr != nil {
 		j.ServerErrorResponse(c, serverErr)
 	} else if userErrs != nil {
-		j.ErrorResponse(c, http.StatusBadRequest, responseCode, nil, userErrs...)
+		j.ErrorResponse(c, status, responseCode, nil, userErrs...)
 	} else {
 		panic("func ServerOrUserErrorResponse: serverErr and userErrs are nil")
 	}
