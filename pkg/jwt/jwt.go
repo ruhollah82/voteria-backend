@@ -79,16 +79,19 @@ func CreateAccessFromUser(accessExpireTime time.Duration, userId uint64, usernam
 	return access, err
 }
 
-func GetUserFromAccess(access string) (userId uint64, username string, err error) {
+func GetUserFromAccess(access string) (uint64, string, error) {
 	mapClaims, err := VerifyJWT(access)
 	if err != nil {
 		return 0, "", err
 	}
 
-	userId = mapClaims["userId"].(uint64)
-	username = mapClaims["username"].(string)
+	userId, ok := mapClaims["userId"]
+	username, ok2 := mapClaims["username"]
+	if !ok || !ok2 {
+		return 0, "", errors.New("userId or username not found in jwt token")
+	}
 
-	return userId, username, nil
+	return userId.(uint64), username.(string), nil
 }
 
 func CreateRefreshAndAccessFromUserWithMap(refreshExpireTime, accessExpireTime time.Duration, userId uint64, username string) (tokens map[string]string, err error) {
