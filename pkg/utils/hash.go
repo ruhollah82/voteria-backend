@@ -27,5 +27,5 @@ func HashPasswordWithSalt(password string, salt string) (string, error) {
 }
 
 func CompareHashAndPassword(hashedPassword, password, salt string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password+salt))
 }
