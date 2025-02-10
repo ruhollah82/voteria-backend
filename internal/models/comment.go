@@ -8,7 +8,8 @@ type Comment struct {
 
 	Score      int       `gorm:"default:0"`
 	CreatedAt  time.Time `gorm:"autoCreateTime"`
-	ModifiedAt time.Time `gorm:"autoUpdateTime"`
+	ModifiedAt time.Time `gorm:"autoUpdateTime:false"`
+	IsDeleted  bool      `gorm:"default:false"`
 
 	CommentID uint64
 	AuthorID  uint64
@@ -24,4 +25,6 @@ type CommentVote struct {
 
 	UserID uint64
 	User   User `gorm:"constraint:OnDelete:CASCADE;"`
+
+	Vote bool // true for up vote and false for down vote
 }

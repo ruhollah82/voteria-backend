@@ -20,6 +20,9 @@ type CommentHandler interface {
 	Delete(c *gin.Context)
 	GetAll(c *gin.Context)
 	GetByID(c *gin.Context)
+	UpVote(c *gin.Context)
+	DownVote(c *gin.Context)
+	DeleteVote(c *gin.Context)
 }
 
 type commentHandler struct {
@@ -201,4 +204,91 @@ func (h *commentHandler) GetByID(c *gin.Context) {
 	}
 
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+}
+
+func (h *commentHandler) UpVote(c *gin.Context) {
+
+	commentIdString, ok := c.Params.Get("commentId")
+	if !ok {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", nil, errors.New("comment_id: comment id not found in url params"))
+		return
+	}
+	commentId, err := strconv.Atoi(commentIdString)
+	if err != nil {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", nil, errors.New("comment_id: invalid comment id"))
+		return
+	}
+
+	user, ok := c.Get("user")
+	if !ok {
+		h.response.ServerErrorResponse(c, errors.New("user not found in context"))
+		return
+	}
+
+	responseDTO := h.service.Vote(uint64(commentId), true, user.(models.User))
+	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		return
+	}
+
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+
+}
+
+func (h *commentHandler) DownVote(c *gin.Context) {
+
+	commentIdString, ok := c.Params.Get("commentId")
+	if !ok {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", nil, errors.New("comment_id: comment id not found in url params"))
+		return
+	}
+	commentId, err := strconv.Atoi(commentIdString)
+	if err != nil {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", nil, errors.New("comment_id: invalid comment id"))
+		return
+	}
+
+	user, ok := c.Get("user")
+	if !ok {
+		h.response.ServerErrorResponse(c, errors.New("user not found in context"))
+		return
+	}
+
+	responseDTO := h.service.Vote(uint64(commentId), false, user.(models.User))
+	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		return
+	}
+
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+
+}
+
+func (h *commentHandler) DeleteVote(c *gin.Context) {
+
+	commentIdString, ok := c.Params.Get("commentId")
+	if !ok {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", nil, errors.New("comment_id: comment id not found in url params"))
+		return
+	}
+	commentId, err := strconv.Atoi(commentIdString)
+	if err != nil {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", nil, errors.New("comment_id: invalid comment id"))
+		return
+	}
+
+	user, ok := c.Get("user")
+	if !ok {
+		h.response.ServerErrorResponse(c, errors.New("user not found in context"))
+		return
+	}
+
+	responseDTO := h.service.DeleteVote(uint64(commentId), user.(models.User))
+	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		return
+	}
+
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+
 }

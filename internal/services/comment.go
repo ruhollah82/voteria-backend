@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -18,17 +19,22 @@ type CommentService interface {
 	Delete(commentId uint64, user models.User) dtos.ResponseDTO
 	GetAll(postId uint64, sortBy enums.SortBy, page int) dtos.ResponseDTO
 	GetByID(commentId uint64) dtos.ResponseDTO
+
+	Vote(commentId uint64, vote bool, user models.User) dtos.ResponseDTO
+	DeleteVote(commentId uint64, user models.User) dtos.ResponseDTO
 }
 
 type commentService struct {
 	repo     repositories.CommentRepository
 	postRepo repositories.PostRepository
+	voteRepo repositories.CommentVoteRepository
 	validate *validator.Validate
 }
 
-func NewCommentService(repo repositories.CommentRepository, postRepo repositories.PostRepository, validate *validator.Validate) CommentService {
+func NewCommentService(repo repositories.CommentRepository, voteRepo repositories.CommentVoteRepository, postRepo repositories.PostRepository, validate *validator.Validate) CommentService {
 	return &commentService{
 		repo:     repo,
+		voteRepo: voteRepo,
 		postRepo: postRepo,
 		validate: validate,
 	}
@@ -125,6 +131,13 @@ func (s *commentService) Update(commentInput dtos.CommentInput, commentId uint64
 		return
 	}
 
+	if comment.IsDeleted {
+		responseDTO.UserErrs = []error{errors.New("this comment has been deleted")}
+		responseDTO.ResponseCode = "deleted_comment"
+		responseDTO.Status = 400
+		return
+	}
+
 	// update comment
 	comment.Content = commentInput.Content
 	comment.ModifiedAt = time.Now()
@@ -179,6 +192,7 @@ func (s *commentService) Delete(commentId uint64, user models.User) (responseDTO
 
 		// set comment as deleted
 		comment.Content = "[deleted]"
+		comment.IsDeleted = true
 		err := s.repo.Update(comment)
 		if err != nil {
 			responseDTO.ServerErr = err
@@ -235,5 +249,120 @@ func (s *commentService) GetByID(commentId uint64) (responseDTO dtos.ResponseDTO
 
 	commentOutput := dtos.GetCommentOutputFromComment(comment)
 	responseDTO.Data["data"] = commentOutput
+	return
+}
+
+func (s *commentService) Vote(commentId uint64, vote bool, user models.User) (responseDTO dtos.ResponseDTO) {
+	responseDTO.Data = make(map[string]any)
+
+	// check comment already exists
+	_, err := s.repo.GetByID(commentId)
+	if err != nil {
+		if err == custom_errors.RecordNotFound {
+			responseDTO.UserErrs = []error{errors.New("comment_id: comment not found")}
+			responseDTO.ResponseCode = "not_found"
+			responseDTO.Status = 404
+			return
+		}
+
+		responseDTO.ServerErr = err
+		return
+	}
+
+	// delete previous user vote if exists
+	commentVote, err := s.voteRepo.Delete(commentId, user.ID)
+	if err != nil && err != custom_errors.RecordNotFound {
+		responseDTO.ServerErr = err
+		return
+	}
+
+	previousVote := commentVote.Vote
+
+	var newVote bool
+
+	if err == custom_errors.RecordNotFound {
+		newVote = true
+	}
+
+	fmt.Println("-----------", newVote, "----", err)
+
+	commentVote = models.CommentVote{
+		UserID:    user.ID,
+		CommentID: commentId,
+		Vote:      vote,
+	}
+
+	err = s.voteRepo.Create(commentVote)
+	if err != nil {
+		responseDTO.ServerErr = err
+		return
+	}
+
+	if newVote {
+		if vote {
+			// increase comment score
+			err = s.repo.AddCommentScore(commentId, 1)
+
+		} else {
+			// decrease comment score
+			err = s.repo.AddCommentScore(commentId, -1)
+		}
+	} else {
+
+		if vote {
+			if previousVote {
+				// nothing
+			} else {
+				// comment score + 2
+				err = s.repo.AddCommentScore(commentId, 2)
+			}
+		} else {
+			if previousVote {
+				// comment score - 2
+				err = s.repo.AddCommentScore(commentId, -2)
+			} else {
+				// nothing
+			}
+		}
+	}
+	if err != nil {
+		responseDTO.ServerErr = err
+		return
+	}
+
+	responseDTO.Data["msg"] = "Done"
+	return
+
+}
+
+func (s *commentService) DeleteVote(commentId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
+
+	responseDTO.Data = make(map[string]any)
+
+	// delete vote
+	commentVote, err := s.voteRepo.Delete(commentId, user.ID)
+	if err != nil {
+		if err == custom_errors.RecordNotFound {
+			responseDTO.UserErrs = []error{errors.New("you didn't vote to this comment")}
+			responseDTO.ResponseCode = "no_vote"
+			responseDTO.Status = 400
+			return
+		}
+
+		responseDTO.ServerErr = err
+		return
+	}
+
+	if commentVote.Vote {
+		err = s.repo.AddCommentScore(commentId, -1)
+	} else {
+		err = s.repo.AddCommentScore(commentId, 1)
+	}
+	if err != nil {
+		responseDTO.ServerErr = err
+		return
+	}
+
+	responseDTO.Data["msg"] = "Done"
 	return
 }

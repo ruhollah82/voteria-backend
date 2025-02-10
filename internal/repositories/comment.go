@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+
 	"github.com/yaghoubi-mn/voter/internal/config"
 	"github.com/yaghoubi-mn/voter/internal/custom_errors"
 	"github.com/yaghoubi-mn/voter/internal/enums"
@@ -15,6 +17,7 @@ type CommentRepository interface {
 	GetByID(commentId uint64) (models.Comment, error)
 	GetAll(postId uint64, sortBy enums.SortBy, page int) ([]models.Comment, error)
 	GetAllReplies(commentId uint64) ([]models.Comment, error)
+	AddCommentScore(commentId uint64, number int) error
 }
 
 type commentRepository struct {
@@ -68,4 +71,23 @@ func (r *commentRepository) GetAllReplies(commentId uint64) ([]models.Comment, e
 	}
 
 	return comments, nil
+}
+
+func (r *commentRepository) AddCommentScore(commentId uint64, number int) error {
+	var expr string
+	if number >= 0 {
+		expr = fmt.Sprintf("score + %v", number)
+	} else {
+		expr = fmt.Sprintf("score %v", number)
+	}
+
+	if err := r.db.Model(&models.Comment{}).Where("id=?", commentId).Update("score", gorm.Expr(expr)).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return custom_errors.RecordNotFound
+		}
+
+		return err
+	}
+
+	return nil
 }
