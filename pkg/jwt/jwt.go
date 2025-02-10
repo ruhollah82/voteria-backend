@@ -19,7 +19,7 @@ func CreateJWT(mapClaims map[string]any) (string, error) {
 	}
 
 	jwtMapClaims := jwt.MapClaims{}
-	for key := range jwtMapClaims {
+	for key := range mapClaims {
 		jwtMapClaims[key] = mapClaims[key]
 	}
 
@@ -91,7 +91,7 @@ func GetUserFromAccess(access string) (uint64, string, error) {
 		return 0, "", errors.New("userId or username not found in jwt token")
 	}
 
-	return userId.(uint64), username.(string), nil
+	return uint64(userId.(float64)), username.(string), nil
 }
 
 func CreateRefreshAndAccessFromUserWithMap(refreshExpireTime, accessExpireTime time.Duration, userId uint64, username string) (tokens map[string]string, err error) {
@@ -100,6 +100,5 @@ func CreateRefreshAndAccessFromUserWithMap(refreshExpireTime, accessExpireTime t
 	tokens["refresh"] = refresh
 	tokens["access"] = access
 	tokens["accessExpireSeconds"] = strconv.Itoa(int(accessExpireTime.Seconds()))
-
 	return
 }
