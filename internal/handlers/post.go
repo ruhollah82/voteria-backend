@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -20,6 +21,9 @@ type PostHandler interface {
 	Delete(c *gin.Context)
 	GetAll(c *gin.Context)
 	GetByID(c *gin.Context)
+	UpVote(c *gin.Context)
+	DownVote(c *gin.Context)
+	DeleteVote(c *gin.Context)
 }
 
 type postHandler struct {
@@ -134,20 +138,25 @@ func (h *postHandler) GetAll(c *gin.Context) {
 		return
 	}
 
-	orderByString := c.Query("order_by")
+	sortByString, ok := c.GetQuery("sort_by")
 
-	var orderBy enums.SortBy
-	switch orderByString {
+	var sortBy enums.SortBy
+	if !ok {
+		sortBy = enums.DefaultSort
+	}
+	fmt.Println("-------", sortByString)
+	switch sortByString {
 	case "score":
-		orderBy = enums.SortByScore
+		sortBy = enums.SortByScore
 	case "date":
-		orderBy = enums.SortByDate
+		sortBy = enums.SortByDate
 	default:
-		orderBy = enums.DefaultSort
+		h.response.ErrorResponse(c, 400, "invalid_param", nil, errors.New("sort_by: invalid sort_by value"))
+		return
 	}
 
 	// call service
-	responseDTO := h.service.GetAll(orderBy, page)
+	responseDTO := h.service.GetAll(sortBy, page)
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
 		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
@@ -177,4 +186,91 @@ func (h *postHandler) GetByID(c *gin.Context) {
 	}
 
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+}
+
+func (h *postHandler) UpVote(c *gin.Context) {
+
+	postIdString, ok := c.Params.Get("postId")
+	if !ok {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", nil, errors.New("post_id: post id not found in url params"))
+		return
+	}
+	postId, err := strconv.Atoi(postIdString)
+	if err != nil {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		return
+	}
+
+	user, ok := c.Get("user")
+	if !ok {
+		h.response.ServerErrorResponse(c, errors.New("user not found in context"))
+		return
+	}
+
+	responseDTO := h.service.Vote(uint64(postId), true, user.(models.User))
+	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		return
+	}
+
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+
+}
+
+func (h *postHandler) DownVote(c *gin.Context) {
+
+	postIdString, ok := c.Params.Get("postId")
+	if !ok {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", nil, errors.New("post_id: post id not found in url params"))
+		return
+	}
+	postId, err := strconv.Atoi(postIdString)
+	if err != nil {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		return
+	}
+
+	user, ok := c.Get("user")
+	if !ok {
+		h.response.ServerErrorResponse(c, errors.New("user not found in context"))
+		return
+	}
+
+	responseDTO := h.service.Vote(uint64(postId), false, user.(models.User))
+	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		return
+	}
+
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+
+}
+
+func (h *postHandler) DeleteVote(c *gin.Context) {
+
+	postIdString, ok := c.Params.Get("postId")
+	if !ok {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", nil, errors.New("post_id: post id not found in url params"))
+		return
+	}
+	postId, err := strconv.Atoi(postIdString)
+	if err != nil {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		return
+	}
+
+	user, ok := c.Get("user")
+	if !ok {
+		h.response.ServerErrorResponse(c, errors.New("user not found in context"))
+		return
+	}
+
+	responseDTO := h.service.DeleteVote(uint64(postId), user.(models.User))
+	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		return
+	}
+
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+
 }

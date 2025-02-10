@@ -18,16 +18,20 @@ type PostService interface {
 	Delete(postId uint64, user models.User) dtos.ResponseDTO
 	GetAll(sortBy enums.SortBy, page int) dtos.ResponseDTO
 	GetByID(postId uint64) dtos.ResponseDTO
+	Vote(postId uint64, vote bool, user models.User) dtos.ResponseDTO
+	DeleteVote(postId uint64, user models.User) dtos.ResponseDTO
 }
 
 type postService struct {
 	repo     repositories.PostRepository
+	voteRepo repositories.PostVoteRepository
 	validate *validator.Validate
 }
 
-func NewPostService(repo repositories.PostRepository, validate *validator.Validate) PostService {
+func NewPostService(repo repositories.PostRepository, voteRepo repositories.PostVoteRepository, validate *validator.Validate) PostService {
 	return &postService{
 		repo:     repo,
+		voteRepo: voteRepo,
 		validate: validate,
 	}
 }
@@ -178,5 +182,118 @@ func (s *postService) GetByID(postId uint64) (responseDTO dtos.ResponseDTO) {
 
 	postOutput := dtos.GetPostOutputFromPost(post)
 	responseDTO.Data["data"] = postOutput
+	return
+}
+
+func (s *postService) Vote(postId uint64, vote bool, user models.User) (responseDTO dtos.ResponseDTO) {
+	responseDTO.Data = make(map[string]any)
+
+	// check post already exists
+	_, err := s.repo.GetByID(postId)
+	if err != nil {
+		if err == custom_errors.RecordNotFound {
+			responseDTO.UserErrs = []error{errors.New("post_id: post not found")}
+			responseDTO.ResponseCode = "not_found"
+			responseDTO.Status = 404
+			return
+		}
+
+		responseDTO.ServerErr = err
+		return
+	}
+
+	// delete previous user vote if exists
+	postVote, err := s.voteRepo.Delete(postId, user.ID)
+	if err != nil && err != custom_errors.RecordNotFound {
+		responseDTO.ServerErr = err
+		return
+	}
+
+	previousVote := postVote.Vote
+
+	var newVote bool
+
+	if err == custom_errors.RecordNotFound {
+		newVote = true
+	}
+
+	postVote = models.PostVote{
+		UserID: user.ID,
+		PostID: postId,
+		Vote:   vote,
+	}
+
+	err = s.voteRepo.Create(postVote)
+	if err != nil {
+		responseDTO.ServerErr = err
+		return
+	}
+
+	if newVote {
+		if vote {
+			// increase post score
+			err = s.repo.AddPostScore(postId, 1)
+
+		} else {
+			// decrease post score
+			err = s.repo.AddPostScore(postId, -1)
+		}
+	} else {
+
+		if vote {
+			if previousVote {
+				// nothing
+			} else {
+				// post score + 2
+				err = s.repo.AddPostScore(postId, 2)
+			}
+		} else {
+			if previousVote {
+				// post score - 2
+				err = s.repo.AddPostScore(postId, -2)
+			} else {
+				// nothing
+			}
+		}
+	}
+	if err != nil {
+		responseDTO.ServerErr = err
+		return
+	}
+
+	responseDTO.Data["msg"] = "Done"
+	return
+
+}
+
+func (s *postService) DeleteVote(postId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
+
+	responseDTO.Data = make(map[string]any)
+
+	// delete vote
+	postVote, err := s.voteRepo.Delete(postId, user.ID)
+	if err != nil {
+		if err == custom_errors.RecordNotFound {
+			responseDTO.UserErrs = []error{errors.New("you didn't vote to this post")}
+			responseDTO.ResponseCode = "no_vote"
+			responseDTO.Status = 400
+			return
+		}
+
+		responseDTO.ServerErr = err
+		return
+	}
+
+	if postVote.Vote {
+		err = s.repo.AddPostScore(postId, -1)
+	} else {
+		err = s.repo.AddPostScore(postId, 1)
+	}
+	if err != nil {
+		responseDTO.ServerErr = err
+		return
+	}
+
+	responseDTO.Data["msg"] = "Done"
 	return
 }

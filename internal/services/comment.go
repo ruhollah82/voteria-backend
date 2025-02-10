@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -283,8 +282,6 @@ func (s *commentService) Vote(commentId uint64, vote bool, user models.User) (re
 	if err == custom_errors.RecordNotFound {
 		newVote = true
 	}
-
-	fmt.Println("-----------", newVote, "----", err)
 
 	commentVote = models.CommentVote{
 		UserID:    user.ID,

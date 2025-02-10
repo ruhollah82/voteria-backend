@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+
 	"github.com/yaghoubi-mn/voter/internal/config"
 	"github.com/yaghoubi-mn/voter/internal/custom_errors"
 	"github.com/yaghoubi-mn/voter/internal/enums"
@@ -14,6 +16,8 @@ type PostRepository interface {
 	Delete(postId uint64) error
 	GetByID(postId uint64) (models.Post, error)
 	GetAll(sortBy enums.SortBy, page int) ([]models.Post, error)
+
+	AddPostScore(postId uint64, number int) error
 }
 
 type postRepository struct {
@@ -54,7 +58,26 @@ func (r *postRepository) GetByID(postId uint64) (models.Post, error) {
 
 func (r *postRepository) GetAll(sortBy enums.SortBy, page int) ([]models.Post, error) {
 	var posts []models.Post
-	err := r.db.Preload("Author").Order(sortBy).Offset((page - 1) * config.PageLimit).Limit(config.PageLimit).Find(&posts).Error
+	err := r.db.Preload("Author").Order(string(sortBy)).Offset((page - 1) * config.PageLimit).Limit(config.PageLimit).Find(&posts).Error
 
 	return posts, err
+}
+
+func (r *postRepository) AddPostScore(postId uint64, number int) error {
+	var expr string
+	if number >= 0 {
+		expr = fmt.Sprintf("score + %v", number)
+	} else {
+		expr = fmt.Sprintf("score %v", number)
+	}
+
+	if err := r.db.Model(&models.Post{}).Where("id=?", postId).Update("score", gorm.Expr(expr)).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return custom_errors.RecordNotFound
+		}
+
+		return err
+	}
+
+	return nil
 }

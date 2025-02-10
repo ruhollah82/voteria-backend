@@ -51,11 +51,13 @@ func main() {
 	userRepository := repositories.NewUserRepository(db)
 	postRepository := repositories.NewPostRepository(db)
 	commentRepository := repositories.NewCommentRepository(db)
+	commentVoteRepository := repositories.NewCommentVoteRepository(db)
+	postVoteRepository := repositories.NewPostVoteRepository(db)
 
 	// services
 	userService := services.NewUserService(userRepository, validate)
-	postService := services.NewPostService(postRepository, validate)
-	commentService := services.NewCommentService(commentRepository, postRepository, validate)
+	postService := services.NewPostService(postRepository, postVoteRepository, validate)
+	commentService := services.NewCommentService(commentRepository, commentVoteRepository, postRepository, validate)
 
 	// handlers
 	userHandler := handlers.NewUserHandler(userService, response)

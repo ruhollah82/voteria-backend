@@ -3,7 +3,7 @@ package enums
 type SortBy string
 
 const (
-	SortByScore SortBy = "DESC score"
-	SortByDate  SortBy = "DESC modified_at"
+	SortByScore SortBy = "score desc"
+	SortByDate  SortBy = "modified_at desc"
 	DefaultSort SortBy = ""
 )

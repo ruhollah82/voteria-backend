@@ -9,7 +9,7 @@ type Post struct {
 
 	Score      int       `gorm:"default:0"`
 	CreatedAt  time.Time `gorm:"autoCreateTime"`
-	ModifiedAt time.Time `gorm:"autoUpdateTime"`
+	ModifiedAt time.Time `gorm:"autoUpdateTime:false"`
 
 	AuthorID uint64
 	Author   User `gorm:"constraint:OnDelete:CASCADE;"`
@@ -23,4 +23,6 @@ type PostVote struct {
 
 	UserID uint64
 	User   User `gorm:"constraint:OnDelete:CASCADE;"`
+
+	Vote bool // true for up vote and false for down vote
 }
