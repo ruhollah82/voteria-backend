@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"github.com/yaghoubi-mn/voter/internal/config"
 	"github.com/yaghoubi-mn/voter/internal/custom_errors"
 	"github.com/yaghoubi-mn/voter/internal/enums"
 	"github.com/yaghoubi-mn/voter/internal/models"
@@ -12,7 +13,7 @@ type PostRepository interface {
 	Update(post models.Post) error
 	Delete(postId uint64) error
 	GetByID(postId uint64) (models.Post, error)
-	GetAll(sortBy enums.SortBy) ([]models.Post, error)
+	GetAll(sortBy enums.SortBy, page int) ([]models.Post, error)
 }
 
 type postRepository struct {
@@ -51,9 +52,9 @@ func (r *postRepository) GetByID(postId uint64) (models.Post, error) {
 	return post, nil
 }
 
-func (r *postRepository) GetAll(sortBy enums.SortBy) ([]models.Post, error) {
+func (r *postRepository) GetAll(sortBy enums.SortBy, page int) ([]models.Post, error) {
 	var posts []models.Post
-	err := r.db.Order(sortBy).Find(&posts).Error
+	err := r.db.Preload("User").Order(sortBy).Offset(page * config.PageLimit).Limit(config.PageLimit).Find(&posts).Error
 
 	return posts, err
 }
