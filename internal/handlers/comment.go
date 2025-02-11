@@ -37,6 +37,17 @@ func NewCommentHandler(service services.CommentService, response response.JsonRe
 	}
 }
 
+// CreateComment godoc
+// @Description create a comment for a post
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Param content body string true "post content"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /posts/:postId/comments [post]
 func (h *commentHandler) Create(c *gin.Context) {
 	var commentInput dtos.CommentInput
 
@@ -71,6 +82,17 @@ func (h *commentHandler) Create(c *gin.Context) {
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
 }
 
+// UpdateComment godoc
+// @Description update a comment
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Param content body string true "post content"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /comments/:commentId [put]
 func (h *commentHandler) Update(c *gin.Context) {
 	var commentInput dtos.CommentInput
 
@@ -106,6 +128,16 @@ func (h *commentHandler) Update(c *gin.Context) {
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
 }
 
+// DeleteComment godoc
+// @Description delete a comment
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /comments/:commentId [delete]
 func (h *commentHandler) Delete(c *gin.Context) {
 
 	user, ok := c.Get("user")
@@ -135,6 +167,18 @@ func (h *commentHandler) Delete(c *gin.Context) {
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
 }
 
+// GetAllComments godoc
+// @Description get all comments of a post by page
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Param page query integer true "page number"
+// @Param sort_by query string true "\"date\" or \"score\""
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /posts/:postId/comments [get]
 func (h *commentHandler) GetAll(c *gin.Context) {
 
 	// get query params from url
@@ -183,6 +227,15 @@ func (h *commentHandler) GetAll(c *gin.Context) {
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
 }
 
+// GetComment godoc
+// @Description get a comment by id
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /comments/:commentId [get]
 func (h *commentHandler) GetByID(c *gin.Context) {
 
 	// get commentId from url
@@ -206,6 +259,16 @@ func (h *commentHandler) GetByID(c *gin.Context) {
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
 }
 
+// UpvoteComment godoc
+// @Description upvote to a post
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /comments/:commentId/upvote [post]
 func (h *commentHandler) UpVote(c *gin.Context) {
 
 	commentIdString, ok := c.Params.Get("commentId")
@@ -235,6 +298,16 @@ func (h *commentHandler) UpVote(c *gin.Context) {
 
 }
 
+// DownVoteComment godoc
+// @Description downvote to a post
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /comments/:commentId/downvote [post]
 func (h *commentHandler) DownVote(c *gin.Context) {
 
 	commentIdString, ok := c.Params.Get("commentId")
@@ -264,6 +337,16 @@ func (h *commentHandler) DownVote(c *gin.Context) {
 
 }
 
+// DeleteVoteComment godoc
+// @Description delete vote of a comment
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /comments/:commentId/votes [delete]
 func (h *commentHandler) DeleteVote(c *gin.Context) {
 
 	commentIdString, ok := c.Params.Get("commentId")

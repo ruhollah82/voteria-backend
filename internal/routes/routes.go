@@ -34,6 +34,7 @@ func SetupRoutes(r *gin.Engine, authMiddleware middleware.AuthMiddleware, userHa
 	authV1.PUT("/comments/:commentId", commentHandler.Update)
 	authV1.DELETE("/comments/:commentId", commentHandler.Delete)
 	v1.GET("/posts/:postId/comments", commentHandler.GetAll)
+	v1.GET("/comments/:commentId", commentHandler.GetByID)
 	authV1.POST("/comments/:commentId/upvote", commentHandler.UpVote)
 	authV1.POST("/comments/:commentId/downvote", commentHandler.DownVote)
 	authV1.DELETE("/comments/:commentId/votes", commentHandler.DeleteVote)

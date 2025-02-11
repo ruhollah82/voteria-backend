@@ -2,11 +2,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
+	swaggerfiles "github.com/swaggo/files"
+	ginswagger "github.com/swaggo/gin-swagger"
+	docs "github.com/yaghoubi-mn/voter/docs"
 	"github.com/yaghoubi-mn/voter/internal/cache"
 	"github.com/yaghoubi-mn/voter/internal/database"
 	"github.com/yaghoubi-mn/voter/internal/handlers"
@@ -19,10 +24,11 @@ import (
 	"github.com/yaghoubi-mn/voter/pkg/response"
 	"github.com/yaghoubi-mn/voter/pkg/utils"
 	"gorm.io/gorm"
-
-	"github.com/gin-gonic/gin"
 )
 
+// @title Voter
+// @version 1.0
+// @BasePath /api/v1/
 func main() {
 	godotenv.Load()
 
@@ -49,6 +55,11 @@ func main() {
 	addDefaultUsers(db)
 
 	r := gin.Default()
+
+	// setup swagger
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	r.GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
+	fmt.Println("swagger URL: http://localhost:8080/swagger/index.html")
 
 	validate := validator.New()
 	response := response.NewJSONResponse()

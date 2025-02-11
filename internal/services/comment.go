@@ -290,6 +290,12 @@ func (s *commentService) GetByID(commentId uint64) (responseDTO dtos.ResponseDTO
 		// get data from database
 		comment, err = s.repo.GetByID(commentId)
 		if err != nil {
+			if err == custom_errors.RecordNotFound {
+				responseDTO.UserErrs = []error{errors.New("comment_id: comment not found")}
+				responseDTO.ResponseCode = "not_found"
+				responseDTO.Status = 404
+				return
+			}
 			responseDTO.ServerErr = err
 			return
 		}

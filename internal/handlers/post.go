@@ -37,6 +37,18 @@ func NewPostHandler(service services.PostService, response response.JsonResponse
 	}
 }
 
+// CreatePost godoc
+// @Description create a post
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Param title body string true "post title"
+// @Param content body string true "post content"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /posts/ [post]
 func (h *postHandler) Create(c *gin.Context) {
 	var postInput dtos.PostInput
 
@@ -59,6 +71,18 @@ func (h *postHandler) Create(c *gin.Context) {
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
 }
 
+// UpdatePost godoc
+// @Description update a post
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Param title body string true "post title"
+// @Param content body string true "post content"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /posts/:postId [put]
 func (h *postHandler) Update(c *gin.Context) {
 	var postInput dtos.PostInput
 
@@ -94,6 +118,16 @@ func (h *postHandler) Update(c *gin.Context) {
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
 }
 
+// DeletePost godoc
+// @Description delete a post
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /posts/:postId [delete]
 func (h *postHandler) Delete(c *gin.Context) {
 
 	user, ok := c.Get("user")
@@ -123,6 +157,18 @@ func (h *postHandler) Delete(c *gin.Context) {
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
 }
 
+// GetAllPosts godoc
+// @Description get all posts by page
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Param page query integer true "page number"
+// @Param sort_by query string true "\"date\" or \"score\""
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /posts/ [get]
 func (h *postHandler) GetAll(c *gin.Context) {
 
 	// get query params from url
@@ -166,6 +212,15 @@ func (h *postHandler) GetAll(c *gin.Context) {
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
 }
 
+// GetPost godoc
+// @Description get a post
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /posts/:postId [get]
 func (h *postHandler) GetByID(c *gin.Context) {
 
 	// get postId from url
@@ -189,6 +244,16 @@ func (h *postHandler) GetByID(c *gin.Context) {
 	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
 }
 
+// UpvotePost godoc
+// @Description upvote to a post
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /posts/:postId/upvote [post]
 func (h *postHandler) UpVote(c *gin.Context) {
 
 	postIdString, ok := c.Params.Get("postId")
@@ -218,6 +283,16 @@ func (h *postHandler) UpVote(c *gin.Context) {
 
 }
 
+// DownVotePost godoc
+// @Description downvote to a post
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /posts/:postId/downvote [post]
 func (h *postHandler) DownVote(c *gin.Context) {
 
 	postIdString, ok := c.Params.Get("postId")
@@ -247,6 +322,16 @@ func (h *postHandler) DownVote(c *gin.Context) {
 
 }
 
+// DeleteVotePost godoc
+// @Description delete vote of a post
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: \"Bearer <jwt-token>\")"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /posts/:postId/votes [delete]
 func (h *postHandler) DeleteVote(c *gin.Context) {
 
 	postIdString, ok := c.Params.Get("postId")

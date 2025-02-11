@@ -1,0 +1,427 @@
+basePath: /api/v1/
+info:
+  contact: {}
+  title: Voter
+  version: "1.0"
+paths:
+  /comments/:commentId:
+    delete:
+      consumes:
+      - application/json
+      description: delete a comment
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - comments
+    get:
+      consumes:
+      - application/json
+      description: get a comment by id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - comments
+    put:
+      consumes:
+      - application/json
+      description: update a comment
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: post content
+        in: body
+        name: content
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - comments
+  /comments/:commentId/downvote:
+    post:
+      consumes:
+      - application/json
+      description: downvote to a post
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - comments
+  /comments/:commentId/upvote:
+    post:
+      consumes:
+      - application/json
+      description: upvote to a post
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - comments
+  /comments/:commentId/votes:
+    delete:
+      consumes:
+      - application/json
+      description: delete vote of a comment
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - comments
+  /posts/:
+    get:
+      consumes:
+      - application/json
+      description: get all posts by page
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: \
+        in: query
+        name: sort_by
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - posts
+    post:
+      consumes:
+      - application/json
+      description: create a post
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: post title
+        in: body
+        name: title
+        required: true
+        schema:
+          type: string
+      - description: post content
+        in: body
+        name: content
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - posts
+  /posts/:postId:
+    delete:
+      consumes:
+      - application/json
+      description: delete a post
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - posts
+    get:
+      consumes:
+      - application/json
+      description: get a post
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - posts
+    put:
+      consumes:
+      - application/json
+      description: update a post
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: post title
+        in: body
+        name: title
+        required: true
+        schema:
+          type: string
+      - description: post content
+        in: body
+        name: content
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - posts
+  /posts/:postId/comments:
+    get:
+      consumes:
+      - application/json
+      description: get all comments of a post by page
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: \
+        in: query
+        name: sort_by
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - comments
+    post:
+      consumes:
+      - application/json
+      description: create a comment for a post
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: post content
+        in: body
+        name: content
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - comments
+  /posts/:postId/downvote:
+    post:
+      consumes:
+      - application/json
+      description: downvote to a post
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - posts
+  /posts/:postId/upvote:
+    post:
+      consumes:
+      - application/json
+      description: upvote to a post
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - posts
+  /posts/:postId/votes:
+    delete:
+      consumes:
+      - application/json
+      description: delete vote of a post
+      parameters:
+      - description: 'authorization token (value: \'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - posts
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: 'login (user1: username: admin password: 1234 , user2: username:test
+        password: test)'
+      parameters:
+      - description: username
+        in: body
+        name: username
+        required: true
+        schema:
+          type: string
+      - description: password
+        in: body
+        name: password
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      tags:
+      - users
+swagger: "2.0"

@@ -25,6 +25,17 @@ func NewUserHandler(service services.UserService, response response.JsonResponse
 	}
 }
 
+// Login godoc
+// @Description login (user1: username: admin password: 1234 , user2: username:test password: test)
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param username body string true "username"
+// @Param password body string true "password"
+// @Success 200
+// @Failure 400
+// @Failure 500
+// @Router /users/login [post]
 func (h *userHandler) Login(c *gin.Context) {
 	var loginInput dtos.LoginInput
 
