@@ -10,6 +10,7 @@ type SubPermission interface {
 	HasCreationPermission(userRole enums.Permissions) bool
 	HasClosePermission(user models.User, sub models.Sub) bool
 	HasDeletePermission(user models.User, sub models.Sub) bool
+	HasEditPermission(user models.User, sub models.Sub) bool
 }
 
 type subPermission struct {
@@ -31,5 +32,9 @@ func (s *subPermission) HasClosePermission(user models.User, sub models.Sub) boo
 }
 
 func (s *subPermission) HasDeletePermission(user models.User, sub models.Sub) bool {
+	return user.Role >= int(s.settings.SubDeletePermission) || sub.OwnerID == user.ID
+}
+
+func (s *subPermission) HasEditPermission(user models.User, sub models.Sub) bool {
 	return user.Role >= int(s.settings.SubDeletePermission) || sub.OwnerID == user.ID
 }
