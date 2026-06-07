@@ -12,40 +12,40 @@ import (
 	"github.com/yaghoubi-mn/voter/internal/repositories"
 )
 
-type SubService interface {
-	Create(subInput dtos.SubInput, user models.User) dtos.ResponseDTO
-	Update(subInput dtos.SubInput, subId uint64, user models.User) dtos.ResponseDTO
-	Delete(subId uint64, user models.User) dtos.ResponseDTO
+type SpaceService interface {
+	Create(spaceInput dtos.SpaceInput, user models.User) dtos.ResponseDTO
+	Update(spaceInput dtos.SpaceInput, subId uint64, user models.User) dtos.ResponseDTO
+	Delete(spaceId uint64, user models.User) dtos.ResponseDTO
 	GetAll(sortBy enums.SortBy, page int) dtos.ResponseDTO
-	GetByID(subId uint64) dtos.ResponseDTO
+	GetByID(spaceId uint64) dtos.ResponseDTO
 }
 
-type subService struct {
-	repo        repositories.SubRepository
+type spaceService struct {
+	repo        repositories.SpaceRepository
 	validate    *validator.Validate
 	permissions permissions.SubPermission
 }
 
-func NewSubService(repo repositories.SubRepository, validate *validator.Validate, permissions permissions.SubPermission) SubService {
-	return &subService{
+func NewSubService(repo repositories.SpaceRepository, validate *validator.Validate, permissions permissions.SubPermission) SpaceService {
+	return &spaceService{
 		repo:        repo,
 		validate:    validate,
 		permissions: permissions,
 	}
 }
 
-func (s *subService) Create(subInput dtos.SubInput, user models.User) (responseDTO dtos.ResponseDTO) {
+func (s *spaceService) Create(spaceInput dtos.SpaceInput, user models.User) (responseDTO dtos.ResponseDTO) {
 
 	responseDTO.Data = make(map[string]any)
 
 	if s.permissions.HasCreationPermission(enums.Permissions(user.Role)) {
-		responseDTO.UserErrs = []error{errors.New("you havn't access to create sub")}
+		responseDTO.UserErrs = []error{errors.New("you havn't access to create space")}
 		responseDTO.ResponseCode = "access_denied"
 		responseDTO.Status = 403
 		return
 	}
 
-	errs := s.validate.Struct(subInput)
+	errs := s.validate.Struct(spaceInput)
 	if errs != nil {
 		errList := make([]error, 0, 2)
 		for _, err := range errs.(validator.ValidationErrors) {
@@ -57,22 +57,22 @@ func (s *subService) Create(subInput dtos.SubInput, user models.User) (responseD
 		return
 	}
 
-	// save sub to database
-	sub := subInput.GetSubModel(user.ID)
+	// save space to database
+	space := spaceInput.GetSubModel(user.ID)
 
-	if err := s.repo.Create(sub); err != nil {
+	if err := s.repo.Create(space); err != nil {
 		responseDTO.ServerErr = err
 		return
 	}
 
-	responseDTO.Data["msg"] = "sub created"
+	responseDTO.Data["msg"] = "space created"
 	return
 }
 
-func (s *subService) Update(subInput dtos.SubInput, subId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
+func (s *spaceService) Update(spaceInput dtos.SpaceInput, spaceId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
 	responseDTO.Data = make(map[string]any)
 
-	errs := s.validate.Struct(subInput)
+	errs := s.validate.Struct(spaceInput)
 	if errs != nil {
 		errList := make([]error, 0, 2)
 		for _, err := range errs.(validator.ValidationErrors) {
@@ -84,12 +84,12 @@ func (s *subService) Update(subInput dtos.SubInput, subId uint64, user models.Us
 		return
 	}
 
-	// get sub from database
-	var sub models.Sub
-	sub, err := s.repo.GetByID(subId)
+	// get space from database
+	var space models.Space
+	space, err := s.repo.GetByID(spaceId)
 	if err != nil {
 		if err == custom_errors.RecordNotFound {
-			responseDTO.UserErrs = []error{errors.New("sub not found")}
+			responseDTO.UserErrs = []error{errors.New("space not found")}
 			responseDTO.ResponseCode = "not_found"
 			responseDTO.Status = 404
 			return
@@ -99,17 +99,17 @@ func (s *subService) Update(subInput dtos.SubInput, subId uint64, user models.Us
 	}
 
 	// check user has access to sub
-	if s.permissions.HasEditPermission(user, sub) {
-		responseDTO.UserErrs = []error{errors.New("you havn't access to this sub")}
+	if s.permissions.HasEditPermission(user, space) {
+		responseDTO.UserErrs = []error{errors.New("you havn't access to this space")}
 		responseDTO.ResponseCode = "access_denied"
 		responseDTO.Status = 403
 		return
 	}
 
 	// update sub
-	subInput.UpdateSub(&sub)
+	spaceInput.UpdateSub(&space)
 
-	err = s.repo.Update(sub)
+	err = s.repo.Update(space)
 	if err != nil {
 		responseDTO.ServerErr = err
 		return
@@ -120,14 +120,14 @@ func (s *subService) Update(subInput dtos.SubInput, subId uint64, user models.Us
 
 }
 
-func (s *subService) Delete(subId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
+func (s *spaceService) Delete(spaceId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
 	responseDTO.Data = make(map[string]any)
 
-	// get sub from database
-	sub, err := s.repo.GetByID(subId)
+	// get space from database
+	space, err := s.repo.GetByID(spaceId)
 	if err != nil {
 		if err == custom_errors.RecordNotFound {
-			responseDTO.UserErrs = []error{errors.New("sub not found")}
+			responseDTO.UserErrs = []error{errors.New("space not found")}
 			responseDTO.ResponseCode = "not_found"
 			responseDTO.Status = 404
 			return
@@ -137,15 +137,15 @@ func (s *subService) Delete(subId uint64, user models.User) (responseDTO dtos.Re
 	}
 
 	// check user has permission
-	if s.permissions.HasDeletePermission(user, sub) {
-		responseDTO.UserErrs = []error{errors.New("you havn't access to this sub")}
+	if s.permissions.HasDeletePermission(user, space) {
+		responseDTO.UserErrs = []error{errors.New("you havn't access to this space")}
 		responseDTO.ResponseCode = "access_denied"
 		responseDTO.Status = 403
 		return
 	}
 
-	// delete sub
-	err = s.repo.Delete(subId)
+	// delete space
+	err = s.repo.Delete(spaceId)
 	if err != nil {
 		responseDTO.ServerErr = err
 		return
@@ -155,36 +155,36 @@ func (s *subService) Delete(subId uint64, user models.User) (responseDTO dtos.Re
 	return
 }
 
-func (s *subService) GetAll(sortBy enums.SortBy, page int) (responseDTO dtos.ResponseDTO) {
+func (s *spaceService) GetAll(sortBy enums.SortBy, page int) (responseDTO dtos.ResponseDTO) {
 	responseDTO.Data = make(map[string]any)
 
-	var subs []models.Sub
+	var spaces []models.Space
 	// get data from database
-	subs, err := s.repo.GetAll(sortBy, page)
+	spaces, err := s.repo.GetAll(sortBy, page)
 	if err != nil {
 		responseDTO.ServerErr = err
 		return
 	}
 
-	subsOutput := make([]dtos.SubOutput, len(subs))
-	for i, sub := range subs {
-		subsOutput[i] = dtos.GetSubOutputFromSub(sub)
+	spacesOutput := make([]dtos.SpaceOutput, len(spaces))
+	for i, sub := range spaces {
+		spacesOutput[i] = dtos.GetSubOutputFromSub(sub)
 	}
 
-	responseDTO.Data["data"] = subsOutput
+	responseDTO.Data["data"] = spacesOutput
 	return
 }
 
-func (s *subService) GetByID(subId uint64) (responseDTO dtos.ResponseDTO) {
+func (s *spaceService) GetByID(spaceId uint64) (responseDTO dtos.ResponseDTO) {
 	responseDTO.Data = make(map[string]any)
 
-	var sub models.Sub
+	var space models.Space
 
-	// get the sub from database
-	sub, err := s.repo.GetByID(subId)
+	// get the space from database
+	space, err := s.repo.GetByID(spaceId)
 	if err != nil {
 		if err == custom_errors.RecordNotFound {
-			responseDTO.UserErrs = []error{errors.New("sub not found")}
+			responseDTO.UserErrs = []error{errors.New("space not found")}
 			responseDTO.ResponseCode = "not_found"
 			responseDTO.Status = 404
 			return
@@ -193,7 +193,7 @@ func (s *subService) GetByID(subId uint64) (responseDTO dtos.ResponseDTO) {
 		return
 	}
 
-	subOutput := dtos.GetSubOutputFromSub(sub)
-	responseDTO.Data["data"] = subOutput
+	spaceOutput := dtos.GetSubOutputFromSub(space)
+	responseDTO.Data["data"] = spaceOutput
 	return
 }

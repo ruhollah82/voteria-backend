@@ -8,9 +8,9 @@ import (
 
 type SubPermission interface {
 	HasCreationPermission(userRole enums.Permissions) bool
-	HasClosePermission(user models.User, sub models.Sub) bool
-	HasDeletePermission(user models.User, sub models.Sub) bool
-	HasEditPermission(user models.User, sub models.Sub) bool
+	HasClosePermission(user models.User, sub models.Space) bool
+	HasDeletePermission(user models.User, sub models.Space) bool
+	HasEditPermission(user models.User, sub models.Space) bool
 }
 
 type subPermission struct {
@@ -27,14 +27,14 @@ func (s *subPermission) HasCreationPermission(userRole enums.Permissions) bool {
 	return userRole >= s.settings.SubCreationPermission
 }
 
-func (s *subPermission) HasClosePermission(user models.User, sub models.Sub) bool {
+func (s *subPermission) HasClosePermission(user models.User, sub models.Space) bool {
 	return user.Role >= int(s.settings.SubClosePermission) || (sub.OwnerID == user.ID && (sub.ClosedByRole == "owner" || sub.ClosedByRole == ""))
 }
 
-func (s *subPermission) HasDeletePermission(user models.User, sub models.Sub) bool {
+func (s *subPermission) HasDeletePermission(user models.User, sub models.Space) bool {
 	return user.Role >= int(s.settings.SubDeletePermission) || sub.OwnerID == user.ID
 }
 
-func (s *subPermission) HasEditPermission(user models.User, sub models.Sub) bool {
+func (s *subPermission) HasEditPermission(user models.User, sub models.Space) bool {
 	return user.Role >= int(s.settings.SubDeletePermission) || sub.OwnerID == user.ID
 }

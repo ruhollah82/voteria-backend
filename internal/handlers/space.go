@@ -23,11 +23,11 @@ type SubHandler interface {
 }
 
 type subHandler struct {
-	service  services.SubService
+	service  services.SpaceService
 	response response.JsonResponse
 }
 
-func NewSubHandler(service services.SubService, response response.JsonResponse) SubHandler {
+func NewSubHandler(service services.SpaceService, response response.JsonResponse) SubHandler {
 	return &subHandler{
 		service:  service,
 		response: response,
@@ -48,7 +48,7 @@ func NewSubHandler(service services.SubService, response response.JsonResponse) 
 // @Failure 500
 // @Router /spaces [post]
 func (h *subHandler) Create(c *gin.Context) {
-	var subInput dtos.SubInput
+	var subInput dtos.SpaceInput
 
 	decoder := json.NewDecoder(c.Request.Body)
 	defer c.Request.Body.Close()
@@ -84,7 +84,7 @@ func (h *subHandler) Create(c *gin.Context) {
 // @Failure 500
 // @Router /spaces/:spaceId [put]
 func (h *subHandler) Update(c *gin.Context) {
-	var subInput dtos.SubInput
+	var subInput dtos.SpaceInput
 
 	decoder := json.NewDecoder(c.Request.Body)
 	defer c.Request.Body.Close()

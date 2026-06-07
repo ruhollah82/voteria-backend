@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -58,6 +59,9 @@ func main() {
 	addDefaultUsers(db)
 
 	r := gin.Default()
+
+	// setup cors middleware
+	r.Use(cors.Default()) // change this on production
 
 	// setup swagger
 	docs.SwaggerInfo.BasePath = "/api/v1"

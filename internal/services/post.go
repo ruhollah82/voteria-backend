@@ -64,7 +64,7 @@ func (s *postService) Create(postInput dtos.PostInput, subID uint64, user models
 	post.Title = postInput.Title
 	post.Content = postInput.Content
 	post.AuthorID = user.ID
-	post.SubID = subID
+	post.SpaceID = subID
 
 	if err := s.repo.Create(post); err != nil {
 		if err == custom_errors.RecordNotFound {

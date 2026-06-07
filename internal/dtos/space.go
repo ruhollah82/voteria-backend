@@ -6,25 +6,25 @@ import (
 	"github.com/yaghoubi-mn/voter/internal/models"
 )
 
-type SubInput struct {
+type SpaceInput struct {
 	Title       string `validate:"required" json:"title"`
 	Description string `validate:"required" json:"description"`
 }
 
-func (s SubInput) GetSubModel(ownerID uint64) models.Sub {
-	return models.Sub{
+func (s SpaceInput) GetSubModel(ownerID uint64) models.Space {
+	return models.Space{
 		Title:       s.Title,
 		Description: s.Description,
 		OwnerID:     ownerID,
 	}
 }
 
-func (s SubInput) UpdateSub(sub *models.Sub) {
+func (s SpaceInput) UpdateSub(sub *models.Space) {
 	sub.Title = s.Title
 	sub.Description = s.Description
 }
 
-type SubOutput struct {
+type SpaceOutput struct {
 	ID               uint64
 	Title            string
 	Description      string
@@ -33,8 +33,8 @@ type SubOutput struct {
 	SubscribersCount uint64
 }
 
-func GetSubOutputFromSub(sub models.Sub) SubOutput {
-	return SubOutput{
+func GetSubOutputFromSub(sub models.Space) SpaceOutput {
+	return SpaceOutput{
 		ID:               sub.ID,
 		Title:            sub.Title,
 		Description:      sub.Description,

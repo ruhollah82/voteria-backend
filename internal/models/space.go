@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type Sub struct {
+type Space struct {
 	ID          uint64
 	Title       string `gorm:"size:50;not null"`
 	Description string `gorm:"size:500;not null"`
@@ -19,9 +19,9 @@ type Sub struct {
 }
 
 type Subscription struct {
-	ID     uint64 `gorm:"primaryKey;pk:user_id,sub_id"`
-	User   User   `gorm:"constraint:OnDelete:CASCADE;"`
-	UserID uint64
-	Sub    Sub `gorm:"constraint:OnDelete:CASCADE;"`
-	SubID  uint64
+	ID      uint64 `gorm:"primaryKey;pk:user_id,sub_id"`
+	User    User   `gorm:"constraint:OnDelete:CASCADE;"`
+	UserID  uint64
+	Space   Space `gorm:"constraint:OnDelete:CASCADE;"`
+	SpaceID uint64
 }
