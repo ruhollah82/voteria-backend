@@ -27,13 +27,13 @@ func (m *AuthMiddleware) Auth() gin.HandlerFunc {
 
 		access := ctx.Request.Header.Get("Authorization")
 		if access == "" {
-			m.response.ErrorResponse(ctx, http.StatusUnauthorized, "", nil, errors.New("authentication is required"))
+			m.response.ErrorResponse(ctx, http.StatusUnauthorized, "unauthorized", "Unauthorized user. sign in first.", errors.New("authentication is required"))
 			ctx.Abort()
 			return
 		}
 
 		if strings.Index(access, "Bearer ") != 0 || len(access) < 8 {
-			m.response.ErrorResponse(ctx, http.StatusBadRequest, "invalid_header", nil, errors.New("invalid authorization header format"))
+			m.response.ErrorResponse(ctx, http.StatusBadRequest, "invalid_header", "invalid authorization header", errors.New("invalid authorization header format"))
 			ctx.Abort()
 			return
 		}
@@ -45,7 +45,7 @@ func (m *AuthMiddleware) Auth() gin.HandlerFunc {
 		user.ID, user.Username, err = jwt.GetUserFromAccess(access)
 		if err != nil {
 			slog.Info("jwt erorr", "error", err)
-			m.response.ErrorResponse(ctx, http.StatusBadRequest, "invalid_token", nil, errors.New("authorization: invalid token"))
+			m.response.ErrorResponse(ctx, http.StatusBadRequest, "invalid_token", "invalid jwt token", errors.New("authorization: invalid jwt token"))
 			ctx.Abort()
 			return
 		}

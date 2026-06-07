@@ -36,9 +36,7 @@ func NewSubService(repo repositories.SpaceRepository, validate *validator.Valida
 
 func (s *spaceService) Create(spaceInput dtos.SpaceInput, user models.User) (responseDTO dtos.ResponseDTO) {
 
-	responseDTO.Data = make(map[string]any)
-
-	if s.permissions.HasCreationPermission(enums.Permissions(user.Role)) {
+	if !s.permissions.HasCreationPermission(enums.Permissions(user.Role)) {
 		responseDTO.UserErrs = []error{errors.New("you havn't access to create space")}
 		responseDTO.ResponseCode = "access_denied"
 		responseDTO.Status = 403
@@ -65,12 +63,11 @@ func (s *spaceService) Create(spaceInput dtos.SpaceInput, user models.User) (res
 		return
 	}
 
-	responseDTO.Data["msg"] = "space created"
+	responseDTO.Msg = "space created"
 	return
 }
 
 func (s *spaceService) Update(spaceInput dtos.SpaceInput, spaceId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
 
 	errs := s.validate.Struct(spaceInput)
 	if errs != nil {
@@ -99,7 +96,7 @@ func (s *spaceService) Update(spaceInput dtos.SpaceInput, spaceId uint64, user m
 	}
 
 	// check user has access to sub
-	if s.permissions.HasEditPermission(user, space) {
+	if !s.permissions.HasEditPermission(user, space) {
 		responseDTO.UserErrs = []error{errors.New("you havn't access to this space")}
 		responseDTO.ResponseCode = "access_denied"
 		responseDTO.Status = 403
@@ -115,13 +112,12 @@ func (s *spaceService) Update(spaceInput dtos.SpaceInput, spaceId uint64, user m
 		return
 	}
 
-	responseDTO.Data["msg"] = "Done"
+	responseDTO.Msg = "Done"
 	return
 
 }
 
 func (s *spaceService) Delete(spaceId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
 
 	// get space from database
 	space, err := s.repo.GetByID(spaceId)
@@ -137,7 +133,7 @@ func (s *spaceService) Delete(spaceId uint64, user models.User) (responseDTO dto
 	}
 
 	// check user has permission
-	if s.permissions.HasDeletePermission(user, space) {
+	if !s.permissions.HasDeletePermission(user, space) {
 		responseDTO.UserErrs = []error{errors.New("you havn't access to this space")}
 		responseDTO.ResponseCode = "access_denied"
 		responseDTO.Status = 403
@@ -151,12 +147,11 @@ func (s *spaceService) Delete(spaceId uint64, user models.User) (responseDTO dto
 		return
 	}
 
-	responseDTO.Data["msg"] = "Done"
+	responseDTO.Msg = "Done"
 	return
 }
 
 func (s *spaceService) GetAll(sortBy enums.SortBy, page int) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
 
 	var spaces []models.Space
 	// get data from database
@@ -171,13 +166,11 @@ func (s *spaceService) GetAll(sortBy enums.SortBy, page int) (responseDTO dtos.R
 		spacesOutput[i] = dtos.GetSubOutputFromSub(sub)
 	}
 
-	responseDTO.Data["data"] = spacesOutput
+	responseDTO.Data = spacesOutput
 	return
 }
 
 func (s *spaceService) GetByID(spaceId uint64) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
-
 	var space models.Space
 
 	// get the space from database
@@ -194,6 +187,6 @@ func (s *spaceService) GetByID(spaceId uint64) (responseDTO dtos.ResponseDTO) {
 	}
 
 	spaceOutput := dtos.GetSubOutputFromSub(space)
-	responseDTO.Data["data"] = spaceOutput
+	responseDTO.Data = spaceOutput
 	return
 }

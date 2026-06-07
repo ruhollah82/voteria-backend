@@ -33,9 +33,9 @@ func NewUserHandler(service services.UserService, response response.JsonResponse
 // @Produce json
 // @Param username body string true "username"
 // @Param password body string true "password"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse{data=map[string]string} "Successfully logged in"
+// @Failure 400 {object} response.ErrorResponse "failed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /users/login [post]
 func (h *userHandler) Login(c *gin.Context) {
 	var loginInput dtos.LoginInput
@@ -52,11 +52,11 @@ func (h *userHandler) Login(c *gin.Context) {
 
 	responseDTO := h.service.Login(loginInput)
 	if responseDTO.UserErrs != nil || responseDTO.ServerErr != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, 200, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, 200, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // Register godoc
@@ -66,9 +66,9 @@ func (h *userHandler) Login(c *gin.Context) {
 // @Produce json
 // @Param username body string true "username"
 // @Param password body string true "password"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse{data=map[string]string} "successfully registered"
+// @Failure 400 {object} response.ErrorResponse "failed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /users/register [post]
 func (h *userHandler) Register(c *gin.Context) {
 	var registerInput dtos.RegisterInput
@@ -85,9 +85,9 @@ func (h *userHandler) Register(c *gin.Context) {
 
 	responseDTO := h.service.Register(registerInput)
 	if responseDTO.UserErrs != nil || responseDTO.ServerErr != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, 200, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, 200, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }

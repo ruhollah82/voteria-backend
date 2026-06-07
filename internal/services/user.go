@@ -33,8 +33,6 @@ func NewUserService(userRepository repositories.UserRepository, validate *valida
 
 func (s *userService) Login(loginInput dtos.LoginInput) (responseDTO dtos.ResponseDTO) {
 
-	responseDTO.Data = make(map[string]any)
-
 	// validate inputs
 	errs := s.validate.Struct(loginInput)
 	if errs != nil {
@@ -73,7 +71,7 @@ func (s *userService) Login(loginInput dtos.LoginInput) (responseDTO dtos.Respon
 
 	// generate jwt
 	tokens, err := jwt.CreateRefreshAndAccessFromUserWithMap(config.JWTRefreshExpireTime, config.JWTAccessExpireTime, user.ID, user.Username)
-	responseDTO.Data["tokens"] = tokens
+	responseDTO.Data = tokens
 	if err != nil {
 		responseDTO.UserErrs = []error{err}
 	}
@@ -82,8 +80,6 @@ func (s *userService) Login(loginInput dtos.LoginInput) (responseDTO dtos.Respon
 }
 
 func (s *userService) Register(registerInput dtos.RegisterInput) (responseDTO dtos.ResponseDTO) {
-
-	responseDTO.Data = make(map[string]any)
 
 	// validate inputs
 	errs := s.validate.Struct(registerInput)
@@ -137,11 +133,11 @@ func (s *userService) Register(registerInput dtos.RegisterInput) (responseDTO dt
 
 	// generate jwt
 	tokens, err := jwt.CreateRefreshAndAccessFromUserWithMap(config.JWTRefreshExpireTime, config.JWTAccessExpireTime, user.ID, user.Username)
-	responseDTO.Data["tokens"] = tokens
+	responseDTO.Data = tokens
 	if err != nil {
 		responseDTO.UserErrs = []error{err}
 	}
 
-	responseDTO.Data["msg"] = "user created"
+	responseDTO.Msg = "User created"
 	return
 }

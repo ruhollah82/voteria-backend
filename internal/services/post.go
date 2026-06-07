@@ -45,8 +45,6 @@ func NewPostService(repo repositories.PostRepository, voteRepo repositories.Post
 
 func (s *postService) Create(postInput dtos.PostInput, subID uint64, user models.User) (responseDTO dtos.ResponseDTO) {
 
-	responseDTO.Data = make(map[string]any)
-
 	errs := s.validate.Struct(postInput)
 	if errs != nil {
 		errList := make([]error, 0, 2)
@@ -76,12 +74,11 @@ func (s *postService) Create(postInput dtos.PostInput, subID uint64, user models
 		return
 	}
 
-	responseDTO.Data["msg"] = "post created"
+	responseDTO.Msg = "Post created"
 	return
 }
 
 func (s *postService) Update(postInput dtos.PostInput, postId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
 
 	errs := s.validate.Struct(postInput)
 	if errs != nil {
@@ -132,14 +129,12 @@ func (s *postService) Update(postInput dtos.PostInput, postId uint64, user model
 		slog.Error("error in flushing database", "error", err)
 	}
 
-	responseDTO.Data["msg"] = "Done"
+	responseDTO.Msg = "Done"
 	return
 
 }
 
 func (s *postService) Delete(postId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
-
 	// check post blongs to user
 	post, err := s.repo.GetByID(postId)
 	if err != nil {
@@ -173,12 +168,11 @@ func (s *postService) Delete(postId uint64, user models.User) (responseDTO dtos.
 		slog.Error("error in flushing database", "error", err)
 	}
 
-	responseDTO.Data["msg"] = "Done"
+	responseDTO.Msg = "Done"
 	return
 }
 
 func (s *postService) GetAll(sortBy enums.SortBy, page int) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
 
 	cacheName := "post_page_" + string(sortBy) + ":" + fmt.Sprint(page)
 
@@ -217,13 +211,11 @@ func (s *postService) GetAll(sortBy enums.SortBy, page int) (responseDTO dtos.Re
 		postsOutput[i] = dtos.GetPostOutputFromPost(post)
 	}
 
-	responseDTO.Data["data"] = postsOutput
+	responseDTO.Data = postsOutput
 	return
 }
 
 func (s *postService) GetByID(postId uint64) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
-
 	cacheName := "post:" + fmt.Sprint(postId)
 
 	var post models.Post
@@ -255,12 +247,11 @@ func (s *postService) GetByID(postId uint64) (responseDTO dtos.ResponseDTO) {
 	}
 
 	postOutput := dtos.GetPostOutputFromPost(post)
-	responseDTO.Data["data"] = postOutput
+	responseDTO.Data = postOutput
 	return
 }
 
 func (s *postService) Vote(postId uint64, vote bool, user models.User) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
 
 	// check post already exists
 	_, err := s.repo.GetByID(postId)
@@ -341,14 +332,12 @@ func (s *postService) Vote(postId uint64, vote bool, user models.User) (response
 		slog.Error("error in flushing database", "error", err)
 	}
 
-	responseDTO.Data["msg"] = "Done"
+	responseDTO.Msg = "Done"
 	return
 
 }
 
 func (s *postService) DeleteVote(postId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
-
-	responseDTO.Data = make(map[string]any)
 
 	// delete vote
 	postVote, err := s.voteRepo.Delete(postId, user.ID)
@@ -380,6 +369,6 @@ func (s *postService) DeleteVote(postId uint64, user models.User) (responseDTO d
 		slog.Error("error in flushing database", "error", err)
 	}
 
-	responseDTO.Data["msg"] = "Done"
+	responseDTO.Msg = "Done"
 	return
 }

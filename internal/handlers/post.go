@@ -45,9 +45,9 @@ func NewPostHandler(service services.PostService, response response.JsonResponse
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param title body string true "post title"
 // @Param content body string true "post content"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse "successfully created"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /subs/:subId/posts [post]
 func (h *postHandler) Create(c *gin.Context) {
 	var postInput dtos.PostInput
@@ -66,22 +66,22 @@ func (h *postHandler) Create(c *gin.Context) {
 	// get subId from url
 	subIdString, ok := c.Params.Get("subId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "sub_id_not_found_in_url", nil, errors.New("sub_id: sub id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "sub_id_not_found_in_url", "", errors.New("sub_id: sub id not found in url params"))
 		return
 	}
 	subId, err := strconv.Atoi(subIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_sub_id", nil, errors.New("sub_id: invalid post id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_sub_id", "", errors.New("sub_id: invalid post id"))
 		return
 	}
 
 	responseDTO := h.service.Create(postInput, uint64(subId), user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // UpdatePost godoc
@@ -92,10 +92,10 @@ func (h *postHandler) Create(c *gin.Context) {
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param title body string true "post title"
 // @Param content body string true "post content"
-// @Success 200
-// @Failure 400
+// @Success 200 {object} response.SuccessResponse "successfully updated"
+// @Failure 400 {object} response.ErrorResponse "falied"
 // @Failure 403
-// @Failure 500
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /posts/:postId [put]
 func (h *postHandler) Update(c *gin.Context) {
 	var postInput dtos.PostInput
@@ -114,22 +114,22 @@ func (h *postHandler) Update(c *gin.Context) {
 	// get postId from url
 	postIdString, ok := c.Params.Get("postId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", nil, errors.New("post_id: post id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", "", errors.New("post_id: post id not found in url params"))
 		return
 	}
 	postId, err := strconv.Atoi(postIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", "", errors.New("post_id: invalid post id"))
 		return
 	}
 
 	responseDTO := h.service.Update(postInput, uint64(postId), user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // DeletePost godoc
@@ -138,9 +138,9 @@ func (h *postHandler) Update(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse "successfully deleted"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /posts/:postId [delete]
 func (h *postHandler) Delete(c *gin.Context) {
 
@@ -153,22 +153,22 @@ func (h *postHandler) Delete(c *gin.Context) {
 	// get postId from url
 	postIdString, ok := c.Params.Get("postId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", nil, errors.New("post_id: post id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", "", errors.New("post_id: post id not found in url params"))
 		return
 	}
 	postId, err := strconv.Atoi(postIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", "", errors.New("post_id: invalid post id"))
 		return
 	}
 
 	responseDTO := h.service.Delete(uint64(postId), user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // GetAllPosts godoc
@@ -179,22 +179,22 @@ func (h *postHandler) Delete(c *gin.Context) {
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param page query integer true "page number"
 // @Param sort_by query string true "\"date\" or \"score\""
-// @Success 200
-// @Failure 400
-// @Failure 403
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse{data=[]dtos.PostOutput} "Successfully fetched"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 403 {object} response.ErrorResponse "Access Denied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /posts/ [get]
 func (h *postHandler) GetAll(c *gin.Context) {
 
 	// get query params from url
 	pageString := c.Query("page")
 	if pageString == "" {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "page_not_found_in_url", nil, errors.New("page: page is required. ex: /?page=1"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "page_not_found_in_url", "", errors.New("page: page is required. ex: /?page=1"))
 		return
 	}
 	page, err := strconv.Atoi(pageString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_page", nil, errors.New("page: invalid page. page must be integer"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_page", "", errors.New("page: invalid page. page must be integer"))
 		return
 	}
 
@@ -213,18 +213,18 @@ func (h *postHandler) GetAll(c *gin.Context) {
 	case "":
 		sortBy = enums.DefaultSort
 	default:
-		h.response.ErrorResponse(c, 400, "invalid_param", nil, errors.New("sort_by: invalid sort_by value"))
+		h.response.ErrorResponse(c, 400, "invalid_param", "", errors.New("sort_by: invalid sort_by value"))
 		return
 	}
 
 	// call service
 	responseDTO := h.service.GetAll(sortBy, page)
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // GetPost godoc
@@ -232,31 +232,31 @@ func (h *postHandler) GetAll(c *gin.Context) {
 // @Tags posts
 // @Accept json
 // @Produce json
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse{data=dtos.PostOutput} "successfully fetched"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /posts/:postId [get]
 func (h *postHandler) GetByID(c *gin.Context) {
 
 	// get postId from url
 	postIdString, ok := c.Params.Get("postId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", nil, errors.New("post_id: post id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", "", errors.New("post_id: post id not found in url params"))
 		return
 	}
 	postId, err := strconv.Atoi(postIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", "", errors.New("post_id: invalid post id"))
 		return
 	}
 
 	responseDTO := h.service.GetByID(uint64(postId))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // UpvotePost godoc
@@ -265,20 +265,20 @@ func (h *postHandler) GetByID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse "successfully saved"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /posts/:postId/upvote [post]
 func (h *postHandler) UpVote(c *gin.Context) {
 
 	postIdString, ok := c.Params.Get("postId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", nil, errors.New("post_id: post id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", "", errors.New("post_id: post id not found in url params"))
 		return
 	}
 	postId, err := strconv.Atoi(postIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", "", errors.New("post_id: invalid post id"))
 		return
 	}
 
@@ -290,11 +290,11 @@ func (h *postHandler) UpVote(c *gin.Context) {
 
 	responseDTO := h.service.Vote(uint64(postId), true, user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 
 }
 
@@ -304,20 +304,20 @@ func (h *postHandler) UpVote(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse "successfully saved"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /posts/:postId/downvote [post]
 func (h *postHandler) DownVote(c *gin.Context) {
 
 	postIdString, ok := c.Params.Get("postId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", nil, errors.New("post_id: post id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", "", errors.New("post_id: post id not found in url params"))
 		return
 	}
 	postId, err := strconv.Atoi(postIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", "", errors.New("post_id: invalid post id"))
 		return
 	}
 
@@ -329,11 +329,11 @@ func (h *postHandler) DownVote(c *gin.Context) {
 
 	responseDTO := h.service.Vote(uint64(postId), false, user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 
 }
 
@@ -343,20 +343,20 @@ func (h *postHandler) DownVote(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse "successfully saved"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /posts/:postId/votes [delete]
 func (h *postHandler) DeleteVote(c *gin.Context) {
 
 	postIdString, ok := c.Params.Get("postId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", nil, errors.New("post_id: post id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", "", errors.New("post_id: post id not found in url params"))
 		return
 	}
 	postId, err := strconv.Atoi(postIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", "", errors.New("post_id: invalid post id"))
 		return
 	}
 
@@ -368,10 +368,10 @@ func (h *postHandler) DeleteVote(c *gin.Context) {
 
 	responseDTO := h.service.DeleteVote(uint64(postId), user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 
 }

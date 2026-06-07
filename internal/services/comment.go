@@ -48,8 +48,6 @@ func NewCommentService(repo repositories.CommentRepository, voteRepo repositorie
 
 func (s *commentService) Create(commentInput dtos.CommentInput, postId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
 
-	responseDTO.Data = make(map[string]any)
-
 	errs := s.validate.Struct(commentInput)
 	if errs != nil {
 		errList := make([]error, 0, 2)
@@ -103,12 +101,11 @@ func (s *commentService) Create(commentInput dtos.CommentInput, postId uint64, u
 		return
 	}
 
-	responseDTO.Data["msg"] = "comment created"
+	responseDTO.Msg = "comment created"
 	return
 }
 
 func (s *commentService) Update(commentInput dtos.CommentInput, commentId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
 
 	errs := s.validate.Struct(commentInput)
 	if errs != nil {
@@ -165,14 +162,12 @@ func (s *commentService) Update(commentInput dtos.CommentInput, commentId uint64
 		slog.Error("error in flushing database", "error", err)
 	}
 
-	responseDTO.Data["msg"] = "Done"
+	responseDTO.Msg = "Done"
 	return
 
 }
 
 func (s *commentService) Delete(commentId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
-
 	// check comment blongs to user
 	comment, err := s.repo.GetByID(commentId)
 	if err != nil {
@@ -234,13 +229,11 @@ func (s *commentService) Delete(commentId uint64, user models.User) (responseDTO
 		slog.Error("error in flushing database", "error", err)
 	}
 
-	responseDTO.Data["msg"] = "Done"
+	responseDTO.Msg = "Done"
 	return
 }
 
 func (s *commentService) GetAll(postId uint64, sortBy enums.SortBy, page int) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
-
 	cacheName := "comment_page_" + string(sortBy) + ":" + fmt.Sprint(postId)
 
 	var comments []models.Comment
@@ -275,13 +268,11 @@ func (s *commentService) GetAll(postId uint64, sortBy enums.SortBy, page int) (r
 		commentsOutput[i] = dtos.GetCommentOutputFromComment(comment)
 	}
 
-	responseDTO.Data["data"] = commentsOutput
+	responseDTO.Data = commentsOutput
 	return
 }
 
 func (s *commentService) GetByID(commentId uint64) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
-
 	cacheName := "comment:" + fmt.Sprint(commentId)
 
 	var comment models.Comment
@@ -315,13 +306,11 @@ func (s *commentService) GetByID(commentId uint64) (responseDTO dtos.ResponseDTO
 		json.NewDecoder(strings.NewReader(data)).Decode(&comment)
 	}
 	commentOutput := dtos.GetCommentOutputFromComment(comment)
-	responseDTO.Data["data"] = commentOutput
+	responseDTO.Data = commentOutput
 	return
 }
 
 func (s *commentService) Vote(commentId uint64, vote bool, user models.User) (responseDTO dtos.ResponseDTO) {
-	responseDTO.Data = make(map[string]any)
-
 	// check comment already exists
 	_, err := s.repo.GetByID(commentId)
 	if err != nil {
@@ -401,14 +390,12 @@ func (s *commentService) Vote(commentId uint64, vote bool, user models.User) (re
 		slog.Error("error in flushing database", "error", err)
 	}
 
-	responseDTO.Data["msg"] = "Done"
+	responseDTO.Msg = "Done"
 	return
 
 }
 
 func (s *commentService) DeleteVote(commentId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
-
-	responseDTO.Data = make(map[string]any)
 
 	// delete vote
 	commentVote, err := s.voteRepo.Delete(commentId, user.ID)
@@ -440,6 +427,6 @@ func (s *commentService) DeleteVote(commentId uint64, user models.User) (respons
 		slog.Error("error in flushing database", "error", err)
 	}
 
-	responseDTO.Data["msg"] = "Done"
+	responseDTO.Msg = "Done"
 	return
 }

@@ -44,9 +44,9 @@ func NewCommentHandler(service services.CommentService, response response.JsonRe
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param content body string true "post content"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse "successfully created"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /posts/:postId/comments [post]
 func (h *commentHandler) Create(c *gin.Context) {
 	var commentInput dtos.CommentInput
@@ -59,12 +59,12 @@ func (h *commentHandler) Create(c *gin.Context) {
 	// get postId from url
 	postIdString, ok := c.Params.Get("postId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", nil, errors.New("post_id: post id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "post_id_not_found_in_url", "", errors.New("post_id: post id not found in url params"))
 		return
 	}
 	postId, err := strconv.Atoi(postIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", "", errors.New("post_id: invalid post id"))
 		return
 	}
 
@@ -75,11 +75,11 @@ func (h *commentHandler) Create(c *gin.Context) {
 	}
 	responseDTO := h.service.Create(commentInput, uint64(postId), user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // UpdateComment godoc
@@ -89,10 +89,10 @@ func (h *commentHandler) Create(c *gin.Context) {
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param content body string true "post content"
-// @Success 200
-// @Failure 400
+// @Success 200 {object} response.SuccessResponse "successfully updated"
+// @Failure 400 {object} response.ErrorResponse "falied"
 // @Failure 403
-// @Failure 500
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /comments/:commentId [put]
 func (h *commentHandler) Update(c *gin.Context) {
 	var commentInput dtos.CommentInput
@@ -111,22 +111,22 @@ func (h *commentHandler) Update(c *gin.Context) {
 	// get commentId from url
 	commentIdString, ok := c.Params.Get("commentId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", nil, errors.New("comment_id: comment id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", "", errors.New("comment_id: comment id not found in url params"))
 		return
 	}
 	commentId, err := strconv.Atoi(commentIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", nil, errors.New("comment_id: invalid comment id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", "", errors.New("comment_id: invalid comment id"))
 		return
 	}
 
 	responseDTO := h.service.Update(commentInput, uint64(commentId), user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // DeleteComment godoc
@@ -135,10 +135,10 @@ func (h *commentHandler) Update(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
-// @Success 200
-// @Failure 400
-// @Failure 403
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse "successfully deleted"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 403 {object} response.ErrorResponse "Access Denied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /comments/:commentId [delete]
 func (h *commentHandler) Delete(c *gin.Context) {
 
@@ -151,22 +151,22 @@ func (h *commentHandler) Delete(c *gin.Context) {
 	// get commentId from url
 	commentIdString, ok := c.Params.Get("commentId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", nil, errors.New("comment_id: comment id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", "", errors.New("comment_id: comment id not found in url params"))
 		return
 	}
 	commentId, err := strconv.Atoi(commentIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", nil, errors.New("comment_id: invalid comment id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", "", errors.New("comment_id: invalid comment id"))
 		return
 	}
 
 	responseDTO := h.service.Delete(uint64(commentId), user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // GetAllComments godoc
@@ -177,33 +177,33 @@ func (h *commentHandler) Delete(c *gin.Context) {
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param page query integer true "page number"
 // @Param sort_by query string true "\"date\" or \"score\""
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse{data=[]dtos.CommentOutput} "successfully fetched"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /posts/:postId/comments [get]
 func (h *commentHandler) GetAll(c *gin.Context) {
 
 	// get query params from url
 	pageString := c.Query("page")
 	if pageString == "" {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "page_not_found_in_url", nil, errors.New("page: page is required. ex: /?page=1"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "page_not_found_in_url", "", errors.New("page: page is required. ex: /?page=1"))
 		return
 	}
 	page, err := strconv.Atoi(pageString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_page", nil, errors.New("page: invalid page. page must be integer"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_page", "", errors.New("page: invalid page. page must be integer"))
 		return
 	}
 
 	// get commentId from url
 	postIdString, ok := c.Params.Get("postId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", nil, errors.New("comment_id: comment id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", "", errors.New("comment_id: comment id not found in url params"))
 		return
 	}
 	postId, err := strconv.Atoi(postIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", nil, errors.New("post_id: invalid post id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_post_id", "", errors.New("post_id: invalid post id"))
 		return
 	}
 
@@ -222,11 +222,11 @@ func (h *commentHandler) GetAll(c *gin.Context) {
 	// call service
 	responseDTO := h.service.GetAll(uint64(postId), orderBy, page)
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // GetComment godoc
@@ -234,31 +234,31 @@ func (h *commentHandler) GetAll(c *gin.Context) {
 // @Tags comments
 // @Accept json
 // @Produce json
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse{data=dtos.CommentOutput} "successfully fetched"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /comments/:commentId [get]
 func (h *commentHandler) GetByID(c *gin.Context) {
 
 	// get commentId from url
 	commentIdString, ok := c.Params.Get("commentId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", nil, errors.New("comment_id: comment id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", "", errors.New("comment_id: comment id not found in url params"))
 		return
 	}
 	commentId, err := strconv.Atoi(commentIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", nil, errors.New("comment_id: invalid comment id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", "", errors.New("comment_id: invalid comment id"))
 		return
 	}
 
 	responseDTO := h.service.GetByID(uint64(commentId))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // UpvoteComment godoc
@@ -267,20 +267,20 @@ func (h *commentHandler) GetByID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse "successfully saved"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /comments/:commentId/upvote [post]
 func (h *commentHandler) UpVote(c *gin.Context) {
 
 	commentIdString, ok := c.Params.Get("commentId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", nil, errors.New("comment_id: comment id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", "", errors.New("comment_id: comment id not found in url params"))
 		return
 	}
 	commentId, err := strconv.Atoi(commentIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", nil, errors.New("comment_id: invalid comment id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", "", errors.New("comment_id: invalid comment id"))
 		return
 	}
 
@@ -292,11 +292,11 @@ func (h *commentHandler) UpVote(c *gin.Context) {
 
 	responseDTO := h.service.Vote(uint64(commentId), true, user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 
 }
 
@@ -306,20 +306,20 @@ func (h *commentHandler) UpVote(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse "successfully saved"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /comments/:commentId/downvote [post]
 func (h *commentHandler) DownVote(c *gin.Context) {
 
 	commentIdString, ok := c.Params.Get("commentId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", nil, errors.New("comment_id: comment id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", "", errors.New("comment_id: comment id not found in url params"))
 		return
 	}
 	commentId, err := strconv.Atoi(commentIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", nil, errors.New("comment_id: invalid comment id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", "", errors.New("comment_id: invalid comment id"))
 		return
 	}
 
@@ -331,11 +331,11 @@ func (h *commentHandler) DownVote(c *gin.Context) {
 
 	responseDTO := h.service.Vote(uint64(commentId), false, user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 
 }
 
@@ -345,20 +345,20 @@ func (h *commentHandler) DownVote(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse "successfully saved"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /comments/:commentId/votes [delete]
 func (h *commentHandler) DeleteVote(c *gin.Context) {
 
 	commentIdString, ok := c.Params.Get("commentId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", nil, errors.New("comment_id: comment id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "comment_id_not_found_in_url", "", errors.New("comment_id: comment id not found in url params"))
 		return
 	}
 	commentId, err := strconv.Atoi(commentIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", nil, errors.New("comment_id: invalid comment id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_comment_id", "", errors.New("comment_id: invalid comment id"))
 		return
 	}
 
@@ -370,10 +370,10 @@ func (h *commentHandler) DeleteVote(c *gin.Context) {
 
 	responseDTO := h.service.DeleteVote(uint64(commentId), user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 
 }

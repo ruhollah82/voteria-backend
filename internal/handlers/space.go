@@ -22,13 +22,13 @@ type SubHandler interface {
 	GetByID(c *gin.Context)
 }
 
-type subHandler struct {
+type spaceHandler struct {
 	service  services.SpaceService
 	response response.JsonResponse
 }
 
 func NewSubHandler(service services.SpaceService, response response.JsonResponse) SubHandler {
-	return &subHandler{
+	return &spaceHandler{
 		service:  service,
 		response: response,
 	}
@@ -42,12 +42,12 @@ func NewSubHandler(service services.SpaceService, response response.JsonResponse
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param title body string true "space title"
 // @Param description body string true "space description"
-// @Success 200
-// @Failure 400
+// @Success 200 {object} response.SuccessResponse "successfully created"
+// @Failure 400 {object} response.ErrorResponse "falied"
 // @Failure 403
-// @Failure 500
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /spaces [post]
-func (h *subHandler) Create(c *gin.Context) {
+func (h *spaceHandler) Create(c *gin.Context) {
 	var subInput dtos.SpaceInput
 
 	decoder := json.NewDecoder(c.Request.Body)
@@ -63,11 +63,11 @@ func (h *subHandler) Create(c *gin.Context) {
 
 	responseDTO := h.service.Create(subInput, user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // UpdateSpace godoc
@@ -78,12 +78,12 @@ func (h *subHandler) Create(c *gin.Context) {
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param title body string true "space title"
 // @Param description body string true "space description"
-// @Success 200
-// @Failure 400
+// @Success 200 {object} response.SuccessResponse "successfully updated"
+// @Failure 400 {object} response.ErrorResponse "falied"
 // @Failure 403
-// @Failure 500
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /spaces/:spaceId [put]
-func (h *subHandler) Update(c *gin.Context) {
+func (h *spaceHandler) Update(c *gin.Context) {
 	var subInput dtos.SpaceInput
 
 	decoder := json.NewDecoder(c.Request.Body)
@@ -100,22 +100,22 @@ func (h *subHandler) Update(c *gin.Context) {
 	// get subId from url
 	subIdString, ok := c.Params.Get("spaceId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "space_id_not_found_in_url", nil, errors.New("space_id: space id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "space_id_not_found_in_url", "", errors.New("space_id: space id not found in url params"))
 		return
 	}
 	subId, err := strconv.Atoi(subIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_space_id", nil, errors.New("space_id: invalid space id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_space_id", "", errors.New("space_id: invalid space id"))
 		return
 	}
 
 	responseDTO := h.service.Update(subInput, uint64(subId), user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // DeleteSpace godoc
@@ -124,12 +124,12 @@ func (h *subHandler) Update(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
-// @Success 200
-// @Failure 400
+// @Success 200 {object} response.SuccessResponse "successfully deleted"
+// @Failure 400 {object} response.ErrorResponse "falied"
 // @Failure 403
-// @Failure 500
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /spaces/:spaceId [delete]
-func (h *subHandler) Delete(c *gin.Context) {
+func (h *spaceHandler) Delete(c *gin.Context) {
 
 	user, ok := c.Get("user")
 	if !ok {
@@ -140,22 +140,22 @@ func (h *subHandler) Delete(c *gin.Context) {
 	// get spaceId from url
 	spaceIdString, ok := c.Params.Get("spaceId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "space_id_not_found_in_url", nil, errors.New("space_id: space id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "space_id_not_found_in_url", "", errors.New("space_id: space id not found in url params"))
 		return
 	}
 	spaceId, err := strconv.Atoi(spaceIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_space_id", nil, errors.New("sub_id: invalid space id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_space_id", "", errors.New("sub_id: invalid space id"))
 		return
 	}
 
 	responseDTO := h.service.Delete(uint64(spaceId), user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // GetAllSpaces godoc
@@ -166,21 +166,21 @@ func (h *subHandler) Delete(c *gin.Context) {
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param page query integer true "page number"
 // @Param sort_by query string true "\"date\"
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse{data=[]dtos.SpaceOutput} "successfully fetched"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /spaces [get]
-func (h *subHandler) GetAll(c *gin.Context) {
+func (h *spaceHandler) GetAll(c *gin.Context) {
 
 	// get query params from url
 	pageString := c.Query("page")
 	if pageString == "" {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "page_not_found_in_url", nil, errors.New("page: page is required. ex: /?page=1"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "page_not_found_in_url", "", errors.New("page: page is required. ex: /?page=1"))
 		return
 	}
 	page, err := strconv.Atoi(pageString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_page", nil, errors.New("page: invalid page. page must be integer"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_page", "", errors.New("page: invalid page. page must be integer"))
 		return
 	}
 
@@ -197,18 +197,18 @@ func (h *subHandler) GetAll(c *gin.Context) {
 	case "":
 		sortBy = enums.DefaultSort
 	default:
-		h.response.ErrorResponse(c, 400, "invalid_param", nil, errors.New("sort_by: invalid sort_by value"))
+		h.response.ErrorResponse(c, 400, "invalid_param", "", errors.New("sort_by: invalid sort_by value"))
 		return
 	}
 
 	// call service
 	responseDTO := h.service.GetAll(sortBy, page)
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
 
 // GetSpace godoc
@@ -216,29 +216,29 @@ func (h *subHandler) GetAll(c *gin.Context) {
 // @Tags spaces
 // @Accept json
 // @Produce json
-// @Success 200
-// @Failure 400
-// @Failure 500
+// @Success 200 {object} response.SuccessResponse{data=dtos.SpaceOutput} "successfully fetched"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /spaces/:spaceId [get]
-func (h *subHandler) GetByID(c *gin.Context) {
+func (h *spaceHandler) GetByID(c *gin.Context) {
 
 	// get subId from url
 	subIdString, ok := c.Params.Get("spaceId")
 	if !ok {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "space_id_not_found_in_url", nil, errors.New("space_id: space id not found in url params"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "space_id_not_found_in_url", "", errors.New("space_id: space id not found in url params"))
 		return
 	}
 	subId, err := strconv.Atoi(subIdString)
 	if err != nil {
-		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_space_id", nil, errors.New("space_id: invalid space id"))
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_space_id", "", errors.New("space_id: invalid space id"))
 		return
 	}
 
 	responseDTO := h.service.GetByID(uint64(subId))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
-		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return
 	}
 
-	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Data)
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
 }
