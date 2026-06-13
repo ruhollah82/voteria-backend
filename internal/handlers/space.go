@@ -22,6 +22,7 @@ type SubHandler interface {
 	GetByID(c *gin.Context)
 	Subscribe(c *gin.Context)
 	Unsubscribe(c *gin.Context)
+	GetUserSubscriptions(c *gin.Context)
 }
 
 type spaceHandler struct {
@@ -313,6 +314,32 @@ func (h *spaceHandler) Unsubscribe(c *gin.Context) {
 	}
 
 	responseDTO := h.service.Unsubscribe(uint64(subId), user.(models.User))
+	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		return
+	}
+
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
+}
+
+// GetUserSubscription godoc
+// @Description Get list of authenticated user subscriptions
+// @Tags spaces
+// @Accept json
+// @Produce json
+// @Success 200 {object} response.SuccessResponse{data=[]dtos.SpaceOutput} "successfully done"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /spaces/subscriptions [get]
+func (h *spaceHandler) GetUserSubscriptions(c *gin.Context) {
+
+	user, ok := c.Get("user")
+	if !ok {
+		h.response.ServerErrorResponse(c, errors.New("user not found in context"))
+		return
+	}
+
+	responseDTO := h.service.GetUserSubscriptions(user.(models.User))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
 		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return

@@ -21,6 +21,7 @@ type SpaceService interface {
 	GetByID(spaceId uint64) dtos.ResponseDTO
 	Subscribe(spaceId uint64, user models.User) dtos.ResponseDTO
 	Unsubscribe(spaceId uint64, user models.User) dtos.ResponseDTO
+	GetUserSubscriptions(user models.User) dtos.ResponseDTO
 }
 
 type spaceService struct {
@@ -237,5 +238,22 @@ func (s spaceService) Unsubscribe(spaceId uint64, user models.User) (responseDTO
 	}
 
 	responseDTO.Msg = "Done"
+	return
+}
+
+func (s spaceService) GetUserSubscriptions(user models.User) (responseDTO dtos.ResponseDTO) {
+
+	spaces, err := s.repo.GetUserSubscriptions(user.ID)
+	if err != nil {
+		responseDTO.ServerErr = err
+		return
+	}
+
+	spacesOutput := make([]dtos.SpaceOutput, len(spaces))
+	for i, sub := range spaces {
+		spacesOutput[i] = dtos.GetSubOutputFromSub(sub)
+	}
+
+	responseDTO.Data = spacesOutput
 	return
 }
