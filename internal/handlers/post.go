@@ -18,6 +18,7 @@ type PostHandler interface {
 	Create(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+	GetBySpace(c *gin.Context)
 	GetAll(c *gin.Context)
 	GetByID(c *gin.Context)
 	UpVote(c *gin.Context)
@@ -45,7 +46,7 @@ func NewPostHandler(service services.PostService, response response.JsonResponse
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param title body string true "post title"
 // @Param content body string true "post content"
-// @Success 200 {object} response.SuccessResponse "successfully created"
+// @Success 200 {object} response.SuccessResponse{data=dtos.PostOutput} "successfully created"
 // @Failure 400 {object} response.ErrorResponse "falied"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /subs/:subId/posts [post]
@@ -172,7 +173,7 @@ func (h *postHandler) Delete(c *gin.Context) {
 }
 
 // GetAllPosts godoc
-// @Description get all posts by page
+// @Description Get all posts by page. This URL is for home page.
 // @Tags posts
 // @Accept json
 // @Produce json
@@ -183,7 +184,7 @@ func (h *postHandler) Delete(c *gin.Context) {
 // @Failure 400 {object} response.ErrorResponse "falied"
 // @Failure 403 {object} response.ErrorResponse "Access Denied"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
-// @Router /posts/ [get]
+// @Router /posts [get]
 func (h *postHandler) GetAll(c *gin.Context) {
 
 	// get query params from url
@@ -219,6 +220,73 @@ func (h *postHandler) GetAll(c *gin.Context) {
 
 	// call service
 	responseDTO := h.service.GetAll(sortBy, page)
+	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
+		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
+		return
+	}
+
+	h.response.Response(c, http.StatusOK, responseDTO.ResponseCode, responseDTO.Msg, responseDTO.Data, nil)
+}
+
+// GetAllPosts godoc
+// @Description get all posts of a space by page
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
+// @Param page query integer true "page number"
+// @Param sort_by query string true "\"date\" or \"score\""
+// @Success 200 {object} response.SuccessResponse{data=[]dtos.PostOutput} "Successfully fetched"
+// @Failure 400 {object} response.ErrorResponse "falied"
+// @Failure 403 {object} response.ErrorResponse "Access Denied"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /spaces/:spaceId/posts [get]
+func (h *postHandler) GetBySpace(c *gin.Context) {
+
+	// get query params from url
+	pageString := c.Query("page")
+	if pageString == "" {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "page_not_found_in_url", "", errors.New("page: page is required. ex: /?page=1"))
+		return
+	}
+	page, err := strconv.Atoi(pageString)
+	if err != nil {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_page", "", errors.New("page: invalid page. page must be integer"))
+		return
+	}
+
+	sortByString, ok := c.GetQuery("sort_by")
+
+	var sortBy enums.SortBy
+	if !ok {
+		sortBy = enums.DefaultSort
+	}
+
+	switch sortByString {
+	case "score":
+		sortBy = enums.SortByScore
+	case "date":
+		sortBy = enums.SortByDate
+	case "":
+		sortBy = enums.DefaultSort
+	default:
+		h.response.ErrorResponse(c, 400, "invalid_param", "", errors.New("sort_by: invalid sort_by value"))
+		return
+	}
+
+	spaceIdString, ok := c.Params.Get("spaceId")
+	if !ok {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "space_id_not_found_in_url", "", errors.New("space_id: space id not found in url params"))
+		return
+	}
+	spaceId, err := strconv.Atoi(spaceIdString)
+	if err != nil {
+		h.response.ErrorResponse(c, http.StatusBadRequest, "invalid_space_id", "", errors.New("space_id: invalid post id"))
+		return
+	}
+
+	// call service
+	responseDTO := h.service.GetBySpace(sortBy, page, uint64(spaceId))
 	if responseDTO.ServerErr != nil || responseDTO.UserErrs != nil {
 		h.response.ServerOrUserErrorResponse(c, responseDTO.Status, responseDTO.Msg, responseDTO.ServerErr, responseDTO.UserErrs, responseDTO.ResponseCode)
 		return

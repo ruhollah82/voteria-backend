@@ -11,7 +11,7 @@ import (
 )
 
 type CommentRepository interface {
-	Create(comment models.Comment) error
+	Create(comment *models.Comment) error
 	Update(comment models.Comment) error
 	Delete(commentId uint64) error
 	GetByID(commentId uint64) (models.Comment, error)
@@ -30,8 +30,8 @@ func NewCommentRepository(db *gorm.DB) CommentRepository {
 	}
 }
 
-func (r *commentRepository) Create(comment models.Comment) error {
-	return r.db.Create(&comment).Error
+func (r *commentRepository) Create(comment *models.Comment) error {
+	return r.db.Create(comment).Error
 }
 
 func (r *commentRepository) Update(comment models.Comment) error {
@@ -66,7 +66,7 @@ func (r *commentRepository) GetAll(postId uint64, sortBy enums.SortBy, page int)
 func (r *commentRepository) GetAllReplies(commentId uint64) ([]models.Comment, error) {
 
 	var comments []models.Comment
-	if err := r.db.Where("comment_id=?", commentId).Find(&comments).Error; err != nil {
+	if err := r.db.Where("parent_id=?", commentId).Find(&comments).Error; err != nil {
 		return nil, err
 	}
 

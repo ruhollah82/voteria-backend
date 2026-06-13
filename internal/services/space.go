@@ -13,8 +13,8 @@ import (
 )
 
 type SpaceService interface {
-	Create(spaceInput dtos.SpaceInput, user models.User) dtos.ResponseDTO
-	Update(spaceInput dtos.SpaceInput, subId uint64, user models.User) dtos.ResponseDTO
+	Create(spaceInput dtos.SpaceCreateInput, user models.User) dtos.ResponseDTO
+	Update(spaceInput dtos.SpaceEditInput, subId uint64, user models.User) dtos.ResponseDTO
 	Delete(spaceId uint64, user models.User) dtos.ResponseDTO
 	GetAll(sortBy enums.SortBy, page int) dtos.ResponseDTO
 	GetByID(spaceId uint64) dtos.ResponseDTO
@@ -34,7 +34,7 @@ func NewSubService(repo repositories.SpaceRepository, validate *validator.Valida
 	}
 }
 
-func (s *spaceService) Create(spaceInput dtos.SpaceInput, user models.User) (responseDTO dtos.ResponseDTO) {
+func (s *spaceService) Create(spaceInput dtos.SpaceCreateInput, user models.User) (responseDTO dtos.ResponseDTO) {
 
 	if !s.permissions.HasCreationPermission(enums.Permissions(user.Role)) {
 		responseDTO.UserErrs = []error{errors.New("you havn't access to create space")}
@@ -58,16 +58,23 @@ func (s *spaceService) Create(spaceInput dtos.SpaceInput, user models.User) (res
 	// save space to database
 	space := spaceInput.GetSubModel(user.ID)
 
-	if err := s.repo.Create(space); err != nil {
+	if err := s.repo.Create(&space); err != nil {
+		if err == custom_errors.DuplicateKey {
+			responseDTO.UserErrs = []error{errors.New("username: this username is already taken")}
+			responseDTO.ResponseCode = "invalid_username"
+			responseDTO.Status = 400
+		}
 		responseDTO.ServerErr = err
 		return
 	}
 
 	responseDTO.Msg = "space created"
+	spaceOutput := dtos.GetSubOutputFromSub(space)
+	responseDTO.Data = spaceOutput
 	return
 }
 
-func (s *spaceService) Update(spaceInput dtos.SpaceInput, spaceId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
+func (s *spaceService) Update(spaceInput dtos.SpaceEditInput, spaceId uint64, user models.User) (responseDTO dtos.ResponseDTO) {
 
 	errs := s.validate.Struct(spaceInput)
 	if errs != nil {

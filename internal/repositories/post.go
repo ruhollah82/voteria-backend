@@ -11,11 +11,12 @@ import (
 )
 
 type PostRepository interface {
-	Create(post models.Post) error
+	Create(post *models.Post) error
 	Update(post models.Post) error
 	Delete(postId uint64) error
 	GetByID(postId uint64) (models.Post, error)
 	GetAll(sortBy enums.SortBy, page int) ([]models.Post, error)
+	GetBySpace(sortBy enums.SortBy, page int, spaceId uint64) ([]models.Post, error)
 
 	AddPostScore(postId uint64, number int) error
 }
@@ -30,9 +31,9 @@ func NewPostRepository(db *gorm.DB) PostRepository {
 	}
 }
 
-func (r *postRepository) Create(post models.Post) error {
+func (r *postRepository) Create(post *models.Post) error {
 
-	if err := r.db.Create(&post).Error; err != nil {
+	if err := r.db.Create(post).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return custom_errors.RecordNotFound
 		}
@@ -65,7 +66,14 @@ func (r *postRepository) GetByID(postId uint64) (models.Post, error) {
 
 func (r *postRepository) GetAll(sortBy enums.SortBy, page int) ([]models.Post, error) {
 	var posts []models.Post
-	err := r.db.Preload("Author").Order(string(sortBy)).Offset((page - 1) * config.PageLimit).Limit(config.PageLimit).Find(&posts).Error
+	err := r.db.Preload("Author").Preload("Space").Order(string(sortBy)).Offset((page - 1) * config.PageLimit).Limit(config.PageLimit).Find(&posts).Error
+
+	return posts, err
+}
+
+func (r *postRepository) GetBySpace(sortBy enums.SortBy, page int, spaceId uint64) ([]models.Post, error) {
+	var posts []models.Post
+	err := r.db.Preload("Author").Order(string(sortBy)).Where(models.Post{SpaceID: spaceId}).Offset((page - 1) * config.PageLimit).Limit(config.PageLimit).Find(&posts).Error
 
 	return posts, err
 }

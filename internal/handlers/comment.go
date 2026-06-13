@@ -44,7 +44,7 @@ func NewCommentHandler(service services.CommentService, response response.JsonRe
 // @Produce json
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param content body string true "post content"
-// @Success 200 {object} response.SuccessResponse "successfully created"
+// @Success 200 {object} response.SuccessResponse{data=dtos.CommentOutput} "successfully created"
 // @Failure 400 {object} response.ErrorResponse "falied"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /posts/:postId/comments [post]

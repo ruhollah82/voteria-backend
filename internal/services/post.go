@@ -1,11 +1,9 @@
 package services
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
+
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -21,6 +19,7 @@ type PostService interface {
 	Create(postInput dtos.PostInput, subID uint64, user models.User) dtos.ResponseDTO
 	Update(postInput dtos.PostInput, postId uint64, user models.User) dtos.ResponseDTO
 	Delete(postId uint64, user models.User) dtos.ResponseDTO
+	GetBySpace(sortBy enums.SortBy, page int, spaceId uint64) dtos.ResponseDTO
 	GetAll(sortBy enums.SortBy, page int) dtos.ResponseDTO
 	GetByID(postId uint64) dtos.ResponseDTO
 	Vote(postId uint64, vote bool, user models.User) dtos.ResponseDTO
@@ -64,7 +63,7 @@ func (s *postService) Create(postInput dtos.PostInput, subID uint64, user models
 	post.AuthorID = user.ID
 	post.SpaceID = subID
 
-	if err := s.repo.Create(post); err != nil {
+	if err := s.repo.Create(&post); err != nil {
 		if err == custom_errors.RecordNotFound {
 			responseDTO.ResponseCode = "invalid_sub_id"
 			responseDTO.UserErrs = []error{errors.New("sub id not found")}
@@ -75,6 +74,8 @@ func (s *postService) Create(postInput dtos.PostInput, subID uint64, user models
 	}
 
 	responseDTO.Msg = "Post created"
+	postOutput := dtos.GetPostOutputFromPost(post)
+	responseDTO.Data = postOutput
 	return
 }
 
@@ -96,6 +97,12 @@ func (s *postService) Update(postInput dtos.PostInput, postId uint64, user model
 	var post models.Post
 	post, err := s.repo.GetByID(postId)
 	if err != nil {
+		if err == custom_errors.RecordNotFound {
+			responseDTO.UserErrs = []error{errors.New("post not found")}
+			responseDTO.ResponseCode = "not_found"
+			responseDTO.Status = 404
+			return
+		}
 		responseDTO.ServerErr = err
 		return
 	}
@@ -123,12 +130,6 @@ func (s *postService) Update(postInput dtos.PostInput, postId uint64, user model
 		return
 	}
 
-	// clear cache
-	err = s.cache.FlushDB()
-	if err != nil {
-		slog.Error("error in flushing database", "error", err)
-	}
-
 	responseDTO.Msg = "Done"
 	return
 
@@ -138,6 +139,12 @@ func (s *postService) Delete(postId uint64, user models.User) (responseDTO dtos.
 	// check post blongs to user
 	post, err := s.repo.GetByID(postId)
 	if err != nil {
+		if err == custom_errors.RecordNotFound {
+			responseDTO.UserErrs = []error{errors.New("post not found")}
+			responseDTO.ResponseCode = "not_found"
+			responseDTO.Status = 404
+			return
+		}
 		responseDTO.ServerErr = err
 		return
 	}
@@ -162,48 +169,40 @@ func (s *postService) Delete(postId uint64, user models.User) (responseDTO dtos.
 		return
 	}
 
-	// clear cache
-	err = s.cache.FlushDB()
-	if err != nil {
-		slog.Error("error in flushing database", "error", err)
-	}
-
 	responseDTO.Msg = "Done"
 	return
 }
 
-func (s *postService) GetAll(sortBy enums.SortBy, page int) (responseDTO dtos.ResponseDTO) {
-
-	cacheName := "post_page_" + string(sortBy) + ":" + fmt.Sprint(page)
+func (s *postService) GetBySpace(sortBy enums.SortBy, page int, spaceId uint64) (responseDTO dtos.ResponseDTO) {
 
 	var posts []models.Post
-	// get data from cache
-	data, err := s.cache.Get(cacheName)
+
+	// get data from database
+	posts, err := s.repo.GetBySpace(sortBy, page, spaceId)
 	if err != nil {
+		responseDTO.ServerErr = err
+		return
+	}
 
-		// get data from database
-		posts, err = s.repo.GetAll(sortBy, page)
-		if err != nil {
-			responseDTO.ServerErr = err
-			return
-		}
+	postsOutput := make([]dtos.PostOutput, len(posts))
+	for i, post := range posts {
+		postsOutput[i] = dtos.GetPostOutputFromPost(post)
+	}
 
-		// save posts to cache
-		data, err := json.Marshal(posts)
-		if err != nil {
+	responseDTO.Data = postsOutput
+	return
 
-			slog.Error("cannot marshal data", "error", err)
+}
 
-		} else {
+func (s *postService) GetAll(sortBy enums.SortBy, page int) (responseDTO dtos.ResponseDTO) {
 
-			err = s.cache.Set(cacheName, string(data))
-			if err != nil {
-				slog.Error("cannot cache data", "error", err)
-			}
-		}
+	var posts []models.Post
 
-	} else {
-		json.NewDecoder(strings.NewReader(data)).Decode(&posts)
+	// get data from database
+	posts, err := s.repo.GetAll(sortBy, page)
+	if err != nil {
+		responseDTO.ServerErr = err
+		return
 	}
 
 	postsOutput := make([]dtos.PostOutput, len(posts))
@@ -216,34 +215,13 @@ func (s *postService) GetAll(sortBy enums.SortBy, page int) (responseDTO dtos.Re
 }
 
 func (s *postService) GetByID(postId uint64) (responseDTO dtos.ResponseDTO) {
-	cacheName := "post:" + fmt.Sprint(postId)
-
 	var post models.Post
 
-	data, err := s.cache.Get(cacheName)
+	// get data from database
+	post, err := s.repo.GetByID(postId)
 	if err != nil {
-
-		// get data from database
-		post, err = s.repo.GetByID(postId)
-		if err != nil {
-			responseDTO.ServerErr = err
-			return
-		}
-
-		data, err := json.Marshal(post)
-		if err != nil {
-			slog.Error("cannot marshal post", "error", err)
-		} else {
-
-			err = s.cache.Set(cacheName, string(data))
-			if err != nil {
-				slog.Error("cannot cache data", "error", err)
-			}
-
-		}
-
-	} else {
-		json.NewDecoder(strings.NewReader(data)).Decode(&post)
+		responseDTO.ServerErr = err
+		return
 	}
 
 	postOutput := dtos.GetPostOutputFromPost(post)
@@ -361,12 +339,6 @@ func (s *postService) DeleteVote(postId uint64, user models.User) (responseDTO d
 	if err != nil {
 		responseDTO.ServerErr = err
 		return
-	}
-
-	// clear cache
-	err = s.cache.FlushDB()
-	if err != nil {
-		slog.Error("error in flushing database", "error", err)
 	}
 
 	responseDTO.Msg = "Done"

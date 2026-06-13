@@ -16,6 +16,8 @@ type PostOutput struct {
 	Content        string `json:"content"`
 	AuthorID       uint64 `json:"author_id"`
 	AuthorUsername string `json:"author_username"`
+	SpaceID        uint64 `json:"space_id"`
+	SpaceUsername  string `json:"space_username"`
 	Score          int    `json:"score"`
 	CreatedAt      string `json:"created_at"`
 	ModifiedAt     string `json:"modified_at"`
@@ -28,6 +30,8 @@ func GetPostOutputFromPost(post models.Post) PostOutput {
 		Content:        post.Content,
 		AuthorID:       post.AuthorID,
 		AuthorUsername: post.Author.Username,
+		SpaceID:        post.Space.ID,
+		SpaceUsername:  post.Space.Username,
 		Score:          post.Score,
 		CreatedAt:      post.CreatedAt.Format(config.TimeFormat),
 		ModifiedAt:     post.ModifiedAt.Format(config.TimeFormat),

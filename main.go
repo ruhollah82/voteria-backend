@@ -31,7 +31,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// @title Voter
+// @title Veteria (Previously Voter)
 // @version 1.0
 // @BasePath /api/v1/
 func main() {
@@ -39,11 +39,11 @@ func main() {
 
 	jwt.Init([]byte(os.Getenv("JWT_SECRET_KEY")))
 
+	// Setup redis cache
 	redisClient, err := cache.Setup()
 	if err != nil {
 		slog.Error("cache connection error", "error", err)
 	}
-
 	redisCache := cache.NewCache(redisClient, context.Background())
 
 	db, err := database.Setup()
@@ -75,7 +75,7 @@ func main() {
 	r.GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 	fmt.Println("swagger URL: http://localhost:8080/swagger/index.html")
 
-	validate := validator.New()
+	validate := setupValidator()
 	response := response.NewJSONResponse()
 
 	// middlewares
@@ -167,4 +167,10 @@ func addDefaultUsers(db *gorm.DB) {
 
 	}
 
+}
+
+func setupValidator() *validator.Validate {
+	validate := validator.New()
+	validate.RegisterValidation("username", utils.ValidateUsername)
+	return validate
 }

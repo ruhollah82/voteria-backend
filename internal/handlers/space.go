@@ -42,13 +42,13 @@ func NewSubHandler(service services.SpaceService, response response.JsonResponse
 // @Param Authorization header string true "authorization token (value: Bearer <jwt-token>)"
 // @Param title body string true "space title"
 // @Param description body string true "space description"
-// @Success 200 {object} response.SuccessResponse "successfully created"
+// @Success 200 {object} response.SuccessResponse{data=dtos.SpaceOutput} "successfully created"
 // @Failure 400 {object} response.ErrorResponse "falied"
 // @Failure 403
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /spaces [post]
 func (h *spaceHandler) Create(c *gin.Context) {
-	var subInput dtos.SpaceInput
+	var subInput dtos.SpaceCreateInput
 
 	decoder := json.NewDecoder(c.Request.Body)
 	defer c.Request.Body.Close()
@@ -84,7 +84,7 @@ func (h *spaceHandler) Create(c *gin.Context) {
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /spaces/:spaceId [put]
 func (h *spaceHandler) Update(c *gin.Context) {
-	var subInput dtos.SpaceInput
+	var subInput dtos.SpaceEditInput
 
 	decoder := json.NewDecoder(c.Request.Body)
 	defer c.Request.Body.Close()
@@ -159,7 +159,7 @@ func (h *spaceHandler) Delete(c *gin.Context) {
 }
 
 // GetAllSpaces godoc
-// @Description get all spaces by page
+// @Description Get all spaces by page. Page paramenters in URL is required!
 // @Tags spaces
 // @Accept json
 // @Produce json

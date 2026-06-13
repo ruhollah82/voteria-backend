@@ -1,7 +1,10 @@
 package custom_errors
 
-import "errors"
+import (
+	"gorm.io/gorm"
+)
 
 var (
-	RecordNotFound error = errors.New("record not found")
+	RecordNotFound error = gorm.ErrRecordNotFound
+	DuplicateKey error = gorm.ErrDuplicatedKey
 )

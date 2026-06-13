@@ -4,6 +4,7 @@ import "time"
 
 type Space struct {
 	ID          uint64
+	Username    string `gorm:"size:50;not null;unique"`
 	Title       string `gorm:"size:50;not null"`
 	Description string `gorm:"size:500;not null"`
 

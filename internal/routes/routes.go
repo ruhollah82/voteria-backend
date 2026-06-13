@@ -20,7 +20,7 @@ func SetupRoutes(r *gin.Engine, authMiddleware middleware.AuthMiddleware, userHa
 	authV1 := v1.Group("/")
 	authV1.Use(authMiddleware.Auth())
 
-	// Subs
+	// Spaces
 	authV1.POST("/spaces", subHandler.Create)
 	authV1.PUT("/spaces/:spaceId", subHandler.Update)
 	authV1.DELETE("/spaces/:spaceId", subHandler.Delete)
@@ -32,6 +32,7 @@ func SetupRoutes(r *gin.Engine, authMiddleware middleware.AuthMiddleware, userHa
 	authV1.PUT("/posts/:postId", postHandler.Update)
 	authV1.DELETE("/posts/:postId", postHandler.Delete)
 	v1.GET("/posts", postHandler.GetAll)
+	v1.GET("/spaces/:spaceId/posts", postHandler.GetBySpace)
 	v1.GET("/posts/:postId", postHandler.GetByID)
 	authV1.POST("/posts/:postId/upvote", postHandler.UpVote)
 	authV1.POST("/posts/:postId/downvote", postHandler.DownVote)

@@ -6,26 +6,34 @@ import (
 	"github.com/yaghoubi-mn/voter/internal/models"
 )
 
-type SpaceInput struct {
+type SpaceCreateInput struct {
+	Title       string `validate:"required" json:"title"`
+	Description string `validate:"required" json:"description"`
+	Username    string `validate:"required,username" json:"username"`
+}
+
+type SpaceEditInput struct {
 	Title       string `validate:"required" json:"title"`
 	Description string `validate:"required" json:"description"`
 }
 
-func (s SpaceInput) GetSubModel(ownerID uint64) models.Space {
+func (s SpaceCreateInput) GetSubModel(ownerID uint64) models.Space {
 	return models.Space{
 		Title:       s.Title,
 		Description: s.Description,
 		OwnerID:     ownerID,
+		Username:    s.Username,
 	}
 }
 
-func (s SpaceInput) UpdateSub(sub *models.Space) {
-	sub.Title = s.Title
-	sub.Description = s.Description
+func (s SpaceEditInput) UpdateSub(space *models.Space) {
+	space.Title = s.Title
+	space.Description = s.Description
 }
 
 type SpaceOutput struct {
 	ID               uint64
+	Username         string
 	Title            string
 	Description      string
 	CreatedAt        time.Time
@@ -33,13 +41,14 @@ type SpaceOutput struct {
 	SubscribersCount uint64
 }
 
-func GetSubOutputFromSub(sub models.Space) SpaceOutput {
+func GetSubOutputFromSub(space models.Space) SpaceOutput {
 	return SpaceOutput{
-		ID:               sub.ID,
-		Title:            sub.Title,
-		Description:      sub.Description,
-		CreatedAt:        sub.CreatedAt,
-		Views:            sub.Views,
-		SubscribersCount: sub.SubscribersCount,
+		ID:               space.ID,
+		Username:         space.Username,
+		Title:            space.Title,
+		Description:      space.Description,
+		CreatedAt:        space.CreatedAt,
+		Views:            space.Views,
+		SubscribersCount: space.SubscribersCount,
 	}
 }

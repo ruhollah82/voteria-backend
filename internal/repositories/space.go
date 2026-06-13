@@ -11,7 +11,7 @@ import (
 )
 
 type SpaceRepository interface {
-	Create(space models.Space) error
+	Create(space *models.Space) error
 	Update(space models.Space) error
 	Delete(spaceId uint64) error
 	GetByID(spaceId uint64) (models.Space, error)
@@ -32,8 +32,8 @@ func NewSubRepository(db *gorm.DB) SpaceRepository {
 	}
 }
 
-func (r *spaceRepository) Create(space models.Space) error {
-	return r.db.Create(&space).Error
+func (r *spaceRepository) Create(space *models.Space) error {
+	return r.db.Create(space).Error
 }
 
 func (r *spaceRepository) Update(space models.Space) error {
