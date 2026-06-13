@@ -20,6 +20,7 @@ type SpaceRepository interface {
 	AddSubScore(spaceId uint64, number int) error
 	SubscribeSub(userID, spaceID uint64) error
 	UnsubscribeSub(userID, spaceID uint64) error
+	GetUserSubscriptions(userID uint64) ([]models.Space, error)
 }
 
 type spaceRepository struct {
@@ -108,4 +109,13 @@ func (r *spaceRepository) UnsubscribeSub(userID, spaceID uint64) error {
 	}
 
 	return nil
+}
+
+func (r *spaceRepository) GetUserSubscriptions(userID uint64) ([]models.Space, error) {
+	var spaces []models.Space
+	if err := r.db.Joins("JOIN subscriptions ON subscriptions.space_id = spaces.id AND subscriptions.user_id=?", userID).Find(&spaces).Error; err != nil {
+		return nil, err
+	}
+
+	return spaces, nil
 }
