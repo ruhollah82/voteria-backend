@@ -92,6 +92,7 @@ func (s *commentService) Create(commentInput dtos.CommentInput, postId uint64, u
 	comment.Content = commentInput.Content
 	comment.AuthorID = user.ID
 	comment.PostID = postId
+	comment.ParentID = commentInput.ParentID
 
 	if err := s.repo.Create(&comment); err != nil {
 		responseDTO.ServerErr = err
