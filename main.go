@@ -115,6 +115,7 @@ func main() {
 
 func migrate(db *gorm.DB) {
 	db.AutoMigrate(
+		models.Space{},
 		models.User{},
 		models.Post{},
 		models.PostVote{},
