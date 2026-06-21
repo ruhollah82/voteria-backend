@@ -77,7 +77,7 @@ func (r *postRepository) GetAll(sortBy enums.SortBy, page int) ([]models.Post, e
 
 func (r *postRepository) GetBySpace(sortBy enums.SortBy, page int, spaceId uint64) ([]models.Post, error) {
 	var posts []models.Post
-	err := r.db.Preload("Author").Order(string(sortBy)).Where(models.Post{SpaceID: spaceId}).Offset((page - 1) * config.PageLimit).Limit(config.PageLimit).Find(&posts).Error
+	err := r.db.Preload("Author").Preload("Space").Order(string(sortBy)).Where(models.Post{SpaceID: spaceId}).Offset((page - 1) * config.PageLimit).Limit(config.PageLimit).Find(&posts).Error
 
 	return posts, err
 }
