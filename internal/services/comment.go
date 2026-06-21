@@ -99,6 +99,12 @@ func (s *commentService) Create(commentInput dtos.CommentInput, postId uint64, u
 		return
 	}
 
+	// increase post comments count by 1
+	if err := s.postRepo.IncreasePostCommentsCount(postId, 1); err != nil {
+		responseDTO.ServerErr = err
+		return
+	}
+
 	responseDTO.Msg = "comment created"
 	commentOutput := dtos.GetCommentOutputFromComment(comment)
 	responseDTO.Data = commentOutput

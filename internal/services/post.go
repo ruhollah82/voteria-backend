@@ -225,6 +225,12 @@ func (s *postService) GetByID(postId uint64) (responseDTO dtos.ResponseDTO) {
 		return
 	}
 
+	// increase post views by 1
+	if err := s.repo.IncreasePostViews(postId, 1); err != nil {
+		responseDTO.ServerErr = err
+		return
+	}
+
 	postOutput := dtos.GetPostOutputFromPost(post)
 	responseDTO.Data = postOutput
 	return

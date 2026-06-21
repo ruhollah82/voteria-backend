@@ -21,6 +21,8 @@ type PostRepository interface {
 	GetUserHomePosts(sortBy enums.SortBy, page int, userID uint64) ([]models.Post, error)
 
 	AddPostScore(postId uint64, number int) error
+	IncreasePostCommentsCount(postId uint64, count int) error
+	IncreasePostViews(postId uint64, count int) error
 }
 
 type postRepository struct {
@@ -111,4 +113,12 @@ func (r *postRepository) GetUserHomePosts(sortBy enums.SortBy, page int, userID 
 		Order(order).Offset((page - 1) * config.PageLimit).Limit(config.PageLimit).Find(&posts).Error
 
 	return posts, err
+}
+
+func (r postRepository) IncreasePostCommentsCount(postId uint64, count int) error {
+	return r.db.Model(&models.Post{}).Where("id=?", postId).Update("comments_count", gorm.Expr("comments_count + ?", count)).Error
+}
+
+func (r postRepository) IncreasePostViews(postId uint64, count int) error {
+	return r.db.Model(&models.Post{}).Where("id=?", postId).Update("views", gorm.Expr("views + ?", count)).Error
 }

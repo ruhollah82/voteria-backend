@@ -8,6 +8,7 @@ type Post struct {
 	Content string `gorm:"size:1000;not null"`
 
 	Score         int       `gorm:"default:0"`
+	Views         uint64    `gorm:"default:0"`
 	CommentsCount int       `gorm:"default:0"`
 	CreatedAt     time.Time `gorm:"autoCreateTime"`
 	ModifiedAt    time.Time `gorm:"autoUpdateTime:false"`
